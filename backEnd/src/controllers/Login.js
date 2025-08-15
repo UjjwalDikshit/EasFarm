@@ -38,7 +38,7 @@ const Login = async(req, res) => {
         });
 
     } catch (err) {
-        console.error(err); // It's good practice to log the full error
+        console.error(err);
         res.status(500).send({
             success: false,
             message: "Error in Login: " + err.message
