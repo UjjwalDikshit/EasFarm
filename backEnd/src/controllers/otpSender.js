@@ -75,7 +75,11 @@ const otpHandler = async(req, res) => {
         await redisClient.set(`emailOtp:${emailId}`, otp, { EX: 300 });
         await sendOtp(otp, emailId);
 
-        res.status(200).send(`OTP sent successfully to your email: ${emailId}`);
+        res.status(200).send(
+            {success:true,
+             message: `OTP sent successfully to your email: ${emailId}`
+            }
+        );
     } catch (err) {
         console.error('OTP send error:', err);
         res.status(500).send("Failed to send OTP. Try again.");

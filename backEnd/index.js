@@ -4,9 +4,11 @@ const auth_user = require('./src/routes/userAuth');
 const homepage = require('./src/routes/homeRoute');
 const service = require('./src/routes/serviceProvider');
 const queryChat = require('./src/routes/aiChat');
+const weather = require('./src/routes/weatherData');
 const dbConnect = require('./src/config/db');
 const cookieParser = require('cookie-parser');
 const redisClient = require("./src/config/redis");
+const cors = require('cors');
 
 
 // https://chat.deepseek.com/a/chat/s/4b529dc7-8a93-4a2e-830d-835bf0acf909 steps to build this project
@@ -15,16 +17,19 @@ const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
-
-
+// app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials:true
+}));
 
 app.use('/user', auth_user);
 app.use('/home', homepage);
 app.use('/service',service);
-
-
+app.use('/api',weather); 
 app.use('/query',queryChat);
-
 
 
 

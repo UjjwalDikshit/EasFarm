@@ -11,6 +11,7 @@ const homepage = async(req, res) => {
         if (!first_home_doc) {
             return res.status(404).send("No homepage data found");
         }
+        // console.log(typeof first_home_doc.banners);
         return res.send(first_home_doc);
 
     } catch (err) {

@@ -9,7 +9,7 @@ async function dbConnect() {
         return;
     }
 
-
+    console.log(process.env.MONGODB_URI)
     try{
         const touch = await mongoose.connect(process.env.MONGODB_URI,{
             dbName:'EasFarm',

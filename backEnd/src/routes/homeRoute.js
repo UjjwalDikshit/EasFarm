@@ -7,7 +7,7 @@ const validUser = require('../middlewares/validUser');
 
 console.log('inside homeroute');
 
-router.get('/', validUser, homePage);
+router.get('/', homePage);//validUser
 router.put('/createhome', createHome); // for admin only
 router.put('/updateban', updateBanners); // for admin only
 router.put('/updateCat', updateCategories); // for admin only

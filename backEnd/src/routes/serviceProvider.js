@@ -8,7 +8,7 @@ const {sellSeedAndFertiliser , QuantityManipulator,updatePriceAndDisOfSeedAndFer
 router.post('/provider/register',register);
 router.post('/tools/register',validSurviceProvider,registerTools);
 router.get('/specific-provider/tools/:providerId',validUser,getSpecificProviderTools);
-router.get('/get-all-tools',validUser,getAllTools);
+router.get('/get-all-tools',getAllTools);
 
 
 
