@@ -7,6 +7,7 @@ const queryChat = require('./src/routes/aiChat');
 const weather = require('./src/routes/weatherData');
 const dbConnect = require('./src/config/db');
 const cookieParser = require('cookie-parser');
+const payment = require('./src/routes/payment');
 const redisClient = require("./src/config/redis");
 const cors = require('cors');
 
@@ -29,6 +30,7 @@ app.use('/user', auth_user);
 app.use('/home', homepage);
 app.use('/service',service);
 app.use('/api',weather); 
+app.use('/payment',payment); // write here
 app.use('/query',queryChat);
 
 
