@@ -24,6 +24,9 @@ const signUp = async(req, res) => {
 
         await validateFarmerInput(req.body);
 
+        console.log(gpsLocation.coordinates[1]);
+        console.log(gpsLocation.coordinates[0]);
+
         const isPhoneNumberUniq = await Farmer.findOne({ mobileNumber });
 
 
@@ -34,6 +37,7 @@ const signUp = async(req, res) => {
             });
         }
 
+        
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create new farmer document

@@ -1,15 +1,26 @@
 import {createSlice } from '@reduxjs/toolkit';
+// try to create functionality which detecte and change auto theme
 
-const themeSlice = createSlice({
-    name:"theme",
-    initialState:"light",
-    reducers:{
-        toggleTheme: (state)=>(state==="light" ?"dark":"light"),
-        setTheme:(state,action)=>state = action.payload,
+
+const initialState = {
+  mode: 'light',
+};
+
+export const themeSlice = createSlice({
+  name: 'theme',
+  initialState,
+  reducers: {
+    toggleTheme: (state) => {
+      state.mode = state.mode === 'light' ? 'dark' : 'light';
     },
-})
+    setTheme: (state, action) => {
+      state.mode = action.payload;
+    },
+  },
+});
 
-export const {toggleTheme,setTheme} = themeSlice.actions;
+export const { toggleTheme, setTheme } = themeSlice.actions;
 export default themeSlice.reducer;
+
 
 // https://aistudio.google.com/prompts/16OjMaBDJzCBQtfEuPDHGBixjDGf-maHi

@@ -12,7 +12,7 @@ const ThemeToogle = ()=>{
         onClick={()=>dispatch(toggleTheme())}
         className="p-2 rounded bg-gray-200 dark:bg-gray-800"
     >
-      {theme === "light" ? "🌞 Light" : "🌙 Dark"}
+      {theme === "lofi" ? "🌞 lofi" : "🌙 carm"}
     </button> 
    );
 };

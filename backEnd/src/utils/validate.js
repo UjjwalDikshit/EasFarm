@@ -62,13 +62,23 @@ const validateFarmerInput = async(data) => {
     }
 
     if (data.gpsLocation) {
-        if (typeof data.gpsLocation.lat !== 'number' || !validator.isFloat(data.gpsLocation.lat.toString(), { min: -90, max: 90 })) {
-            addError('gpsLocation.lat', 'Latitude must be between -90 and 90');
-        }
-        if (typeof data.gpsLocation.lng !== 'number' || !validator.isFloat(data.gpsLocation.lng.toString(), { min: -180, max: 180 })) {
-            addError('gpsLocation.lng', 'Longitude must be between -180 and 180');
+    const coords = data.gpsLocation.coordinates;
+
+        if (!Array.isArray(coords) || coords.length !== 2) {
+            addError('gpsLocation.coordinates', 'Coordinates must be [longitude, latitude]');
+        } else {
+                const [lng, lat] = coords;
+
+                if (typeof lat !== 'number' || !validator.isFloat(lat.toString(), { min: -90, max: 90 })) {
+                addError('gpsLocation.coordinates[1]', 'Latitude must be between -90 and 90');
+                }
+
+                if (typeof lng !== 'number' || !validator.isFloat(lng.toString(), { min: -180, max: 180 })) {
+                addError('gpsLocation.coordinates[0]', 'Longitude must be between -180 and 180');
+                }
         }
     }
+
 
     if (data.allowDataSharing !== undefined && typeof data.allowDataSharing !== 'boolean') {
         addError('allowDataSharing', 'Allow data sharing must be a boolean value');

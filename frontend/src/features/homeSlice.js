@@ -1,19 +1,6 @@
 // src/store/slices/homeSlice.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-
-// Async thunk for fetching home data
-export const fetchHomeData = createAsyncThunk(
-  'home/fetchData',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await axios.get('/api/home-data');
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response.data);
-    }
-  }
-);
+import { createSlice } from '@reduxjs/toolkit';
+import {fetchHomeBannerAndCards} from '../asyncThunk.js'
 
 const initialState = {
   banner: [],
@@ -35,17 +22,18 @@ export const homeSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchHomeData.pending, (state) => {
+      .addCase(fetchHomeBannerAndCards.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchHomeData.fulfilled, (state, action) => {
+      .addCase(fetchHomeBannerAndCards.fulfilled, (state, action) => {
+        // console.log(action.payload.banner);
         state.loading = false;
-        state.banner = action.payload.banner;
-        state.cards = action.payload.cards;
+        state.banner = action.payload.banners;
+        state.cards = action.payload.categories;
         state.fetched = true;
       })
-      .addCase(fetchHomeData.rejected, (state, action) => {
+      .addCase(fetchHomeBannerAndCards.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

@@ -1,7 +1,11 @@
 import InfiniteScroll from "react-infinite-scroll-component";
 import ToolCard from "./ToolCard";
 
-export default function ToolsList({tools,fetchMore, hasMore}){
+export default function ToolsList({ tools = [], fetchMore, hasMore }) {
+    // if (!Array.isArray(tools)) {
+    //     return null;
+    // }
+
     return (
         <InfiniteScroll
             dataLength={tools.length}

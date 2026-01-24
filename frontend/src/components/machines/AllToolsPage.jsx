@@ -18,7 +18,8 @@ export default function AllToolsPage() {
 
   const loadTools = async (reset = false) => {
     try {
-      const res = await fetchTools({ page: reset ? 1 : page, limit, ...filters });
+      let res = await fetchTools({ page: reset ? 1 : page, limit, ...filters });
+      res = res.data;
       
       if (reset) {
         setTools(res.tools);

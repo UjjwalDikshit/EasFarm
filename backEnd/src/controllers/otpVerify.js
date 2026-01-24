@@ -1,15 +1,21 @@
-const redisClient = require('../config/redis');
+const redisClient = require("../config/redis");
 
-const otpVerify = async(req, res, otp, emailId) => {
+const toVerifyOtp = async (emailId, otp) => {
+  
+  console.log(`Inside otpVerify ${emailId} ${otp}`);
 
-    const userOriginalOtp = await redisClient.get(`emailOtp:${emailId}`);
-    const currentOtp = otp;
+  const savedOtp = await redisClient.get(`emailOtp:${emailId}`);
 
-    if (currentOtp !== Number(userOriginalOtp)) {
-        return res.status(500).send({
-            success: "failed",
-            message: "Wrong otp"
-        });
-    }
-}
-module.exports = otpVerify;
+  if (!savedOtp) {
+    throw new Error("OTP expired or not found");
+  }
+
+  if (savedOtp !== String(otp)) {
+    throw new Error(`${savedOtp} ${otp}Invalid OTP`);
+  }
+
+  return true;
+};
+
+
+module.exports = toVerifyOtp;

@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from "react";
 import axiosClient from "../utils/axiosClient";
+import { useNavigate } from "react-router-dom";
+
 
 function PaymentButton({ amount }) {
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const navigate = useNavigate();
+
+  
   /* ==========================
      LOAD RAZORPAY SDK
   ========================== */
@@ -30,6 +35,21 @@ function PaymentButton({ amount }) {
   const handlePayment = async () => {
     if (!scriptLoaded || isProcessing) return;
 
+    try{
+      const loginStatus = await axiosClient.post('/user/checkLogin');
+
+    }
+    catch(err){
+      alert('Login Rirst Then Only You Can Make Payment');
+      if(!err.response.data.loggedIn){
+        localStorage.setItem("redirectedAfterLogin", location.pathname);
+        navigate('/login');
+        return;
+      }
+    }
+
+ 
+
     setIsProcessing(true);
 
     try {
@@ -43,10 +63,8 @@ function PaymentButton({ amount }) {
         { amount: amountInPaise }
       );
 
-      console.log('got order');
-      console.log(orderRes);
 
-      const orderData = orderRes;
+      const orderData = orderRes.data;
 
       if (!orderData?.order_id) {
         throw new Error("Order creation failed");
@@ -58,7 +76,7 @@ function PaymentButton({ amount }) {
         amount: orderData.amount,
         currency: "INR",
         order_id: orderData.order_id,
-        name: "Sanatani International",
+        name: "EasFarm",
         description: "Tool Rental Payment",
 
         handler: async (response) => {
@@ -73,7 +91,7 @@ function PaymentButton({ amount }) {
               }
             );
 
-            const verifyData = verifyRes;
+            const verifyData = verifyRes.data;
 
             if (verifyData.success) {
               alert(`✅ Payment Successful\nPayment ID: ${verifyData.payment_id}`);
@@ -114,10 +132,9 @@ function PaymentButton({ amount }) {
       rzp.open();
 
     } catch (error) {
+      
       console.error("Payment error:", error);
-      alert(
-        error.response?.data?.error || "Something went wrong"
-      );
+      alert(error.response?.data?.message || "Something went wrong");
       setIsProcessing(false);
     }
   };

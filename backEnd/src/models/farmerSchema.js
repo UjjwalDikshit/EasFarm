@@ -50,12 +50,14 @@ const farmerSchema = new mongoose.Schema({
     gpsLocation: {
         type: {
             type: String,
-            enum: ['Point'],   // must be "Point"
+            enum: ['Point'],
+            default: 'Point',
             required: true
         },
         coordinates: {
-            type: [Number],    // [longitude, latitude]
-            required: true
+            type: [Number],
+            required: true,
+            index: '2dsphere'
         }
     },
     emailId: {

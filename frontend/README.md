@@ -1,68 +1,12 @@
-# Authentication App
+# React + Vite
 
-A beautiful and simple React + Vite authentication application with login and signup functionality.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-## Features
+Currently, two official plugins are available:
 
-- ✨ Modern, responsive design with gradient backgrounds
-- 🔄 Toggle between Login and Signup modes
-- 📱 Mobile-friendly interface
-- 🎨 Smooth animations and hover effects
-- 🔒 Form validation (password confirmation for signup)
-- 💫 Glassmorphism design with backdrop blur
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-## Getting Started
+## Expanding the ESLint configuration
 
-### Prerequisites
-
-- Node.js (version 14 or higher)
-- npm or yarn
-
-### Installation
-
-1. Clone or download this project
-2. Navigate to the project directory:
-   ```bash
-   cd auth-app
-   ```
-
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-4. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-5. Open your browser and visit the URL shown in the terminal (usually `http://localhost:5173`)
-
-## Usage
-
-- **Login Mode**: Enter your email and password to sign in
-- **Signup Mode**: Enter your full name, email, password, and confirm password to create an account
-- Click the toggle button at the bottom to switch between login and signup modes
-- Form data is logged to the console for demonstration purposes
-
-## Available Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-
-## Customization
-
-The app is designed to be easily customizable:
-
-- Modify colors and gradients in `src/App.css`
-- Add your own authentication logic in the `handleSubmit` function in `src/App.jsx`
-- Extend the form fields as needed for your use case
-
-## Technologies Used
-
-- React 19
-- Vite
-- CSS3 (with modern features like backdrop-filter and gradients)
-- JavaScript ES6+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

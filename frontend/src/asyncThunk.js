@@ -11,8 +11,8 @@ export const fetchHomeBannerAndCards = createAsyncThunk(
             // if (!res.ok) 
             //      throw new Error(`HTTP error! status: ${res.status}`);
             // console.log(res.data);
-            console.log(res);
-            return res;
+            // console.log(res);
+            return res.data;
         }catch (error) {
             return isRejectedWithValue(error.response.data);
         }

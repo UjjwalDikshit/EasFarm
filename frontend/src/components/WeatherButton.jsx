@@ -14,9 +14,10 @@ export default function WeatherButton() {
     try {
       setLoading(true);
       const { lat, lon } = await getUserLocation();
-      const data = await  axiosClient.get("/api/weather",{
+      const response = await  axiosClient.get("/api/weather",{
             params: {lat,lon}
        });
+      const data = response.data;
       setWeather(data);
       setOpen(true);
       setLoading(false);

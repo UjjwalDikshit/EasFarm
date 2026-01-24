@@ -8,6 +8,10 @@ node_modules/
 # Logs
 *.log
 
+
+experiment
+experiment2
+
 # Build outputs (any depth)
 build/
 dist/
