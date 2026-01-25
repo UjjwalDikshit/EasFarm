@@ -4,7 +4,7 @@ import AllToolsPage from './components/machines/AllToolsPage';
 import AllProductsPage from './components/fertilisers/AllProductPage';
 import WorkInProgress from './pages/WorkInProgress';
 import WeatherButton from './components/WeatherButton';
-import SignUp from './pages/SignUp';
+import Signup from './pages/Signup';
 import Login from './components/login';
 import Logout from './components/Logout';
 import {Routes, Route} from 'react-router';
@@ -25,7 +25,7 @@ function App() {
         <Route path='/products/fertilisers' element={<AllProductsPage/>}/>
         <Route path='/products/husbandry' element = {<WorkInProgress/>}/>
         <Route path='/schemes' element = {<WorkInProgress/>}/>
-        <Route path='/signup' element = {<SignUp/>} />
+        <Route path='/signup' element = {<Signup/>} />
 
       </Routes>
     </>

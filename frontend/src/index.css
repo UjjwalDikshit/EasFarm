@@ -5,3 +5,6 @@
   themes: all;
 }
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;

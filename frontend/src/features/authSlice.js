@@ -123,7 +123,7 @@ const authSlice = createSlice({
       })
       .addCase(registerFarmer.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.success = 'Registration successful! Redirecting to login...';
+        state.success = action.payload?.message || 'Registration successful! Redirecting to login...';
         state.registrationStep = 1;
       })
       .addCase(registerFarmer.rejected, (state, action) => {

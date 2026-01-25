@@ -9,6 +9,7 @@ import headerReducer from "../features/headerSlice";
 import bannerReducer from "../features/bannerSlice";
 import cardsReducer from "../features/cardsSlice";
 import homeReducer from "../features/homeSlice";
+import authReducer from "../features/authSlice";
 
 // ==========================
 // Persist Config
@@ -37,6 +38,7 @@ export const store = configureStore({
 
     // ✅ Reducers that reset on refresh (not persisted)
     header: headerReducer,
+    auth: authReducer,
     cards: cardsReducer,
     home: homeReducer,
     banner: bannerReducer,
