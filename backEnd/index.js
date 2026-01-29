@@ -5,6 +5,7 @@ const homepage = require('./src/routes/homeRoute');
 const service = require('./src/routes/serviceProvider');
 const queryChat = require('./src/routes/aiChat');
 const weather = require('./src/routes/weatherData');
+const blog = require('./src/routes/blog');
 const dbConnect = require('./src/config/db');
 const cookieParser = require('cookie-parser');
 const payment = require('./src/routes/payment');
@@ -32,6 +33,7 @@ app.use('/service',service);
 app.use('/api',weather); 
 app.use('/payment',payment); // write here
 app.use('/query',queryChat);
+app.use('/blog',blog);
 
 
 
