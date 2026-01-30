@@ -1,39 +1,47 @@
 const express = require("express");
 const blog_router = express.Router();
 
+const {createBlog,updateBlog, readBlog, deleteBlog, readBlogUsingSlug, myBlog, publishBlog, unpublishBlog, getFeaturedBlogs, featureBlog, unfeatureBlog}= require('../controllers/blogs/crudBlog');
+
 /* =========================
    📝 BLOG APIs
 ========================= */
 
 // create blog
-blog_router.post("/", /* createBlog */);
+blog_router.post("/",createBlog);
 
 // update blog
-blog_router.put("/:id", /* updateBlog */);
+blog_router.put("/:id", updateBlog );
 
 // get blog by id
-blog_router.get('/:id', /*get blog by id*/); 
+blog_router.get('/:id', readBlog);
 
 // soft delete blog
-blog_router.delete("/:id", /* deleteBlog */);
+blog_router.delete("/:id", deleteBlog );
 
 // list blogs (feed)
 blog_router.get("/", /* listBlogs */);
 
 // get blog by slug
-blog_router.get("/slug/:slug", /* getBlogBySlug */);
+blog_router.get("/slug/:slug", readBlogUsingSlug);
 
 // get my blogs
-blog_router.get("/me", /* myBlogs */);
+blog_router.get("/me", myBlog);
 
 // publish blog
-blog_router.post("/:id/publish", /* publishBlog */);
+blog_router.post("/:id/publish", publishBlog);
 
 // unpublish blog
-blog_router.post("/:id/unpublish", /* unpublishBlog */);
+blog_router.post("/:id/unpublish", unpublishBlog);
 
 // featured blogs
-blog_router.get("/featured", /* featuredBlogs */);
+blog_router.get("/featured", getFeaturedBlogs);
+
+// mark blog featured
+blog_router.post('/:id/mark_featured',featureBlog);
+
+// mark blog unfeature
+blog_router.post('/:id/mark_unfeatured',unfeatureBlog);
 
 // trending blogs
 blog_router.get("/trending", /* trendingBlogs */);
