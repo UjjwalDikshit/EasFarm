@@ -5,6 +5,8 @@ const homepage = require('./src/routes/homeRoute');
 const service = require('./src/routes/serviceProvider');
 const queryChat = require('./src/routes/aiChat');
 const weather = require('./src/routes/weatherData');
+const startTrendingDecay = require("./src/cron/trendingDecay.cron");
+
 const blog = require('./src/routes/blog');
 const dbConnect = require('./src/config/db');
 const cookieParser = require('cookie-parser');
@@ -46,7 +48,8 @@ const Initialisation = async() => {
         await Promise.all([dbConnect(), redisClient.connect()]);
 
         app.listen(process.env.PORT, () => {
-            console.log(`Server is running at post ${process.env.port}`);
+            console.log(`Server is running at post ${process.env.PORT}`);
+            startTrendingDecay();
         })
     } catch (err) {
         console.error('Failed to start server: ', err);

@@ -27,6 +27,11 @@ const commentSchema = new mongoose.Schema(
       trim: true
     },
 
+    repliesCount: {
+      type: Number,
+      default: 0
+    },
+
     isDeleted: {
       type: Boolean,
       default: false
@@ -34,5 +39,8 @@ const commentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+commentSchema.index({ blogId: 1, createdAt: -1 });
+commentSchema.index({ parentCommentId: 1, createdAt: 1 });
 
 module.exports = mongoose.model("Comment", commentSchema);

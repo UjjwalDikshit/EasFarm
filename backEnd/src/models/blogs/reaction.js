@@ -6,26 +6,28 @@ const reactionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Blog",
       required: true,
-      index: true
+      index: true,
     },
 
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true
+      index: true,
     },
 
     type: {
       type: String,
       enum: ["like", "clap", "love", "insightful"],
-      required: true
-    }
+      required: true,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Prevent duplicate reactions
-reactionSchema.index({ blogId: 1, userId: 1, type: 1 }, { unique: true });
+// reactionSchema.index({ blogId: 1, userId: 1, type: 1 }, { unique: true });
+
+reactionSchema.index({ blogId: 1, userId: 1 }, { unique: true });
 
 module.exports = mongoose.model("Reaction", reactionSchema);

@@ -67,6 +67,7 @@ const blogSchema = new mongoose.Schema(
     },
 
     viewsCount: { type: Number, default: 0 },
+    duplicateViewsCount: {type:Number,default:0},
     likesCount: { type: Number, default: 0 },
     commentsCount: { type: Number, default: 0 },
 
@@ -76,5 +77,11 @@ const blogSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
+
+blogSchema.index({ status: 1, isDeleted: 1, publishedAt: -1 });
+blogSchema.index({ tags: 1 });
+blogSchema.index({ category: 1 });
+blogSchema.index({ trendingScore: -1 });
+
 
 module.exports = mongoose.model("Blog", blogSchema);

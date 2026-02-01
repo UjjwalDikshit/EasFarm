@@ -1,5 +1,12 @@
 const jwt = require("jsonwebtoken");
 const Blog = require("../../models/blogs/blog");
+const UserInterest = require("../.blogs./models/userInterest");
+const BlogView = require('../../models/blogs/blogViews');
+const Reaction = require("../../models/blogs/reaction");
+const Comment = require('../../models/blogs/comment')
+
+const blog = require("../../models/blogs/blog");
+
 
 const createBlog = async (req, res) => {
   try {
@@ -448,9 +455,441 @@ const unfeatureBlog = async (req, res) => {
 };
 
 const notPersonalisedFeed = async(req,res)=>{
-  
+
+  try {
+    // 1 Get userId (from auth middleware)
+    const userId = req.user._id;
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const interest = await UserInterest.findOne({ userId });
+
+    // fallback if no interests
+    let matchQuery = {
+      status: "published",
+      isDeleted: false
+    };
+
+    if (interest) {
+      matchQuery.$or = [
+        { tags: { $in: interest.tags || [] } },
+        { category: { $in: interest.categories || [] } }
+      ];
+    }
+
+    const blogs = await Blog.find(matchQuery)
+      .sort({ publishedAt: -1 }) // newest first
+      .skip(skip)
+      .limit(limit)
+      .select("title slug coverImage category tags publishedAt");
+
+    // Total count (for frontend paging)
+    const total = await Blog.countDocuments(matchQuery);
+
+    return res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total,
+      hasMore: skip + blogs.length < total,
+      data: blogs
+    });
+
+  } catch (error) {
+    console.error("Feed error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load feed"
+    });
+  }
 };
+
+
+const trending = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const matchQuery = {
+      status: "published",
+      isDeleted: false
+    };
+
+    const blogs = await Blog.find(matchQuery)
+      .sort({ trendingScore: -1 }) 
+      .skip(skip)
+      .limit(limit)
+      .select("title slug coverImage category tags publishedAt trendingScore");
+
+    const total = await Blog.countDocuments(matchQuery);
+
+    return res.status(200).json({
+      success: true,
+      page,
+      limit,
+      total,
+      hasMore: skip + blogs.length < total,
+      data: blogs
+    });
+
+  } catch (error) {
+    console.error("Trending feed error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to load trending blogs"
+    });
+  }
+};
+
+const blogView = async(req,res)=>{
+    // blogView unique + duplicate handler
+    try {
+    const blogId = req.params.blogId;
+    const userId = req.user?.id || null;
+    const ipAddress = req.ip;
+    const userAgent = req.headers["user-agent"];
+
+    // 1️⃣ Check if blog exists
+    const blog = await Blog.findById(blogId).select("_id");
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    // 2️⃣ Check if this user / IP already viewed
+    const viewQuery = userId
+      ? { blogId, userId }
+      : { blogId, ipAddress };
+
+    const existingView = await BlogView.findOne(viewQuery);
+
+    // 3️⃣ If first view → create BlogView + update counters
+    if (!existingView) {
+      await BlogView.create({
+        blogId,
+        userId,
+        ipAddress,
+        userAgent
+      });
+
+      // 4️⃣ Increment blog counters atomically
+      await Blog.findByIdAndUpdate(
+        blogId,
+        {
+          $inc: {
+            totalViews: 1,
+            viewsCount: 1,
+            trendingScore: 1   // keep simple for now
+          },
+          $set: {
+            lastViewedAt: new Date()
+          }
+        },
+        { new: false }
+      );
+    } else {
+      // 5️⃣ Optional: still increment total views (not unique / trending)
+      await Blog.findByIdAndUpdate(
+        blogId,
+        {
+          $inc: { totalViews: 1 },
+          $set: { lastViewedAt: new Date() }
+        }
+      );
+    }
+
+    return res.status(200).json({
+      success: true,
+      viewed: true
+    });
+
+  } catch (error) {
+    console.error("Blog view error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}
+
+// REACT ON BLOG Logged-in users only
+const reactionOnBlog = async (req, res) => {
+  try {
+    const blogId = req.params.blogId;
+    const userId = req.user.id; // auth required
+    const { type } = req.body;
+
+    if (!["like", "clap", "love", "insightful"].includes(type)) {
+      return res.status(400).json({ message: "Invalid reaction type" });
+    }
+
+    // 1️⃣ Check existing reaction
+    const existingReaction = await Reaction.findOne({ blogId, userId });
+
+    // 2️⃣ If same reaction → toggle off
+    if (existingReaction && existingReaction.type === type) {
+      await Reaction.deleteOne({ _id: existingReaction._id });
+
+      await Blog.findByIdAndUpdate(blogId, {
+        $inc: { likesCount: -1, trendingScore: -3 }
+        
+      });
+
+      return res.status(200).json({
+        reacted: false,
+        reaction: null
+      });
+    }
+
+    // 3️⃣ If reaction exists but different type → update
+    if (existingReaction) {
+      await Reaction.updateOne(
+        { _id: existingReaction._id },
+        { $set: { type } }
+      );
+
+      // likesCount stays same
+      return res.status(200).json({
+        reacted: true,
+        reaction: type
+      });
+    }
+
+    // 4️⃣ No reaction yet → create new
+    await Reaction.create({
+      blogId,
+      userId,
+      type
+    });
+
+    await Blog.findByIdAndUpdate(blogId, {
+      $inc: { likesCount: 1 , trendingScore: 3}
+    });
+
+    return res.status(200).json({
+      reacted: true,
+      reaction: type
+    });
+
+  } catch (error) {
+    console.error("Reaction error:", error);
+
+    // Handle race-condition duplicate
+    if (error.code === 11000) {
+      return res.status(409).json({ message: "Already reacted" });
+    }
+
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getReactionPerType = async(req,res)=>{ // need to work on this functoin
+    //   Reaction.aggregate([
+    //   { $match: { blogId: mongoose.Types.ObjectId(blogId) } },
+    //   {
+    //     $group: {
+    //       _id: "$type",
+    //       count: { $sum: 1 }
+    //     }
+    //   }
+    // ]);
+  return res.json("First complete this function");
+// **response
+// [
+//   { "_id": "like", "count": 42 },
+//   { "_id": "clap", "count": 31 },
+//   { "_id": "love", "count": 18 }
+// ]
+
+};
+
+const commentOnBlog = async (req, res) => {
+  try {
+    const blogId = req.params.blogId;
+    const userId = req.user.id;
+    const { content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: "Comment cannot be empty" });
+    }
+
+    const comment = await Comment.create({
+      blogId,
+      userId,
+      content: content.trim(),
+      parentCommentId: null
+    });
+
+    // Optional: increment comment count on blog
+    await Blog.findByIdAndUpdate(blogId, {
+      $inc: { commentsCount: 1,trendingScore: 5 }
+    });
+
+    return res.status(201).json({
+      success: true,
+      comment
+    });
+
+  } catch (error) {
+    console.error("Comment on blog error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const commentOnComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const userId = req.user.id;
+    const { content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: "Reply cannot be empty" });
+    }
+
+    // Ensure parent comment exists & not deleted
+    const parentComment = await Comment.findOne({
+      _id: commentId,
+      isDeleted: false
+    }).select("blogId");
+
+    if (!parentComment) {
+      return res.status(404).json({ message: "Parent comment not found" });
+    }
+
+    const reply = await Comment.create({
+      blogId: parentComment.blogId,
+      userId,
+      content: content.trim(),
+      parentCommentId: commentId
+    });
+
+    await Comment.findByIdAndUpdate(commentId, {
+      $inc: { repliesCount: 1 }
+    });
+
+
+    return res.status(201).json({
+      success: true,
+      comment: reply
+    });
+
+  } catch (error) {
+    console.error("Comment on comment error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const getComments = async (req, res) => {
+  try {
+    const blogId = req.params.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 20);
+    const skip = (page - 1) * limit;
+
+    const comments = await Comment.find({
+      blogId,
+      parentCommentId: null,
+      isDeleted: false
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate("userId", "name avatar");
+
+    const total = await Comment.countDocuments({
+      blogId,
+      parentCommentId: null,
+      isDeleted: false
+    });
+
+    return res.status(200).json({
+      page,
+      limit,
+      total,
+      comments
+    });
+
+  } catch (error) {
+    console.error("Get comments error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const updateComment = async (req, res) => {
+  try {
+    const commentId = req.params.id;
+    const userId = req.user.id;
+    const { content } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: "Comment cannot be empty" });
+    }
+
+    const comment = await Comment.findOne({
+      _id: commentId,
+      userId,
+      isDeleted: false
+    });
+
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found or unauthorized" });
+    }
+
+    // Add edit window (LinkedIn-style)
+    const EDIT_WINDOW_MS = 15 * 24 * 60 * 60 * 1000;
+
+    if (Date.now() - comment.createdAt.getTime() > EDIT_WINDOW_MS) {
+      return res.status(403).json({
+        message: "Editing window expired"
+      });
+    }
+
+    comment.content = content.trim();
+    await comment.save();
+
+    return res.status(200).json({
+      success: true,
+      comment
+    });
+
+  } catch (error) {
+    console.error("Update comment error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const deleteComment = async (req, res) => {
+  try {
+    const commentId = req.params.id;
+    const userId = req.user.id;
+
+    const comment = await Comment.findOne({
+      _id: commentId,
+      userId,
+      isDeleted: false
+    });
+
+    if (!comment) {
+      return res.status(404).json({ message: "Comment not found or unauthorized" });
+    }
+
+    comment.isDeleted = true;
+    comment.content = "[deleted]";
+    await comment.save();
+
+    return res.status(200).json({
+      success: true
+    });
+
+  } catch (error) {
+    console.error("Delete comment error:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 
 module.exports = { createBlog, updateBlog, deleteBlog, readBlog , readBlogUsingSlug,
                     myBlog, publishBlog, unpublishBlog, getFeaturedBlogs, featureBlog,
-                  unfeatureBlog, notPersonalisedFeed};
+                  unfeatureBlog, notPersonalisedFeed, trending, blogView, reactionOnBlog
+                , getReactionPerType, commentOnBlog, commentOnComment, getComments, updateComment
+               ,deleteComment};

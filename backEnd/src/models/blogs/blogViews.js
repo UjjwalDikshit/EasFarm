@@ -28,4 +28,14 @@ const blogViewSchema = new mongoose.Schema(
   { timestamps: false }
 );
 
+blogViewSchema.index(
+  { blogId: 1, userId: 1 },
+  { unique: true, partialFilterExpression: { userId: { $ne: null } } }
+);
+
+blogViewSchema.index(
+  { blogId: 1, ipAddress: 1 },
+  { unique: true, partialFilterExpression: { userId: null } }
+);
+
 module.exports = mongoose.model("BlogView", blogViewSchema);

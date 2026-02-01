@@ -1,7 +1,12 @@
 const express = require("express");
 const blog_router = express.Router();
 
-const {createBlog,updateBlog, readBlog, deleteBlog, readBlogUsingSlug, myBlog, publishBlog, unpublishBlog, getFeaturedBlogs, featureBlog, unfeatureBlog}= require('../controllers/blogs/crudBlog');
+const {
+     createBlog,updateBlog, readBlog, deleteBlog, readBlogUsingSlug, myBlog, publishBlog,
+     unpublishBlog, getFeaturedBlogs, featureBlog, unfeatureBlog, notPersonalisedFeed, trending,
+     reactionOnBlog,getReactionPerType, commentOnComment, commentOnBlog, getComments, 
+     updateComment, deleteComment
+   }= require('../controllers/blogs/crudBlog');
 
 /* =========================
    📝 BLOG APIs
@@ -20,7 +25,7 @@ blog_router.get('/:id', readBlog);
 blog_router.delete("/:id", deleteBlog );
 
 // list blogs (feed)
-blog_router.get("/", /* listBlogs */);
+blog_router.get("/", notPersonalisedFeed);
 
 // get blog by slug
 blog_router.get("/slug/:slug", readBlogUsingSlug);
@@ -44,21 +49,19 @@ blog_router.post('/:id/mark_featured',featureBlog);
 blog_router.post('/:id/mark_unfeatured',unfeatureBlog);
 
 // trending blogs
-blog_router.get("/trending", /* trendingBlogs */);
+blog_router.get("/trending", trending);
 
 
 /* =========================
    ❤️ REACTION APIs
 ========================= */
 
-// add reaction
-blog_router.post("/:id/reactions", /* addReaction */);
+// toggle reaction
+blog_router.post("/:id/reactions", reactionOnBlog);
 
-// remove reaction
-blog_router.delete("/:id/reactions/:type", /* removeReaction */);
 
 // get reaction counts + user reaction
-blog_router.get("/:id/reactions", /* getReactions */);
+blog_router.get("/:id/reactions", getReactionPerType);
 
 
 /* =========================
@@ -66,19 +69,19 @@ blog_router.get("/:id/reactions", /* getReactions */);
 ========================= */
 
 // add comment
-blog_router.post("/:id/comments", /* addComment */);
+blog_router.post("/:id/comments", commentOnBlog);
 
 // get comments
-blog_router.get("/:id/comments", /* getComments */);
+blog_router.get("/:id/comments", getComments);
 
 // reply to comment
-blog_router.post("/comments/:id/reply", /* replyComment */);
+blog_router.post("/comments/:id/reply", commentOnComment);
 
 // update comment
-blog_router.put("/comments/:id", /* updateComment */);
+blog_router.put("/comments/:id", updateComment);
 
 // delete comment (soft)
-blog_router.delete("/comments/:id", /* deleteComment */);
+blog_router.delete("/comments/:id", deleteComment);
 
 
 /* =========================
