@@ -5,7 +5,16 @@ const {
      createBlog,updateBlog, readBlog, deleteBlog, readBlogUsingSlug, myBlog, publishBlog,
      unpublishBlog, getFeaturedBlogs, featureBlog, unfeatureBlog, notPersonalisedFeed, trending,
      reactionOnBlog,getReactionPerType, commentOnComment, commentOnBlog, getComments, 
-     updateComment, deleteComment
+     updateComment, deleteComment,
+     getBlogsViewStats,
+     getBlogViews,
+     trackBlogView,
+     createReport,
+     listReports,
+     updateReportStatus,
+     getUserInterests,
+     createUserInterests,
+     updateUserInterests
    }= require('../controllers/blogs/crudBlog');
 
 /* =========================
@@ -87,15 +96,16 @@ blog_router.delete("/comments/:id", deleteComment);
 /* =========================
    👀 BLOG VIEW APIs
 ========================= */
+// seems like unnecessary api
 
 // track blog view
-blog_router.post("/:id/view", /* trackBlogView */);
+blog_router.post("/:id/view", trackBlogView);
 
 // get blog views count
-blog_router.get("/:id/views", /* getBlogViews */);
+blog_router.get("/:id/views", getBlogViews);
 
 // admin analytics
-router.get("/analytics/blogs/views", /* getBlogsViewStats */);
+blog_router.get("/analytics/blogs/views", getBlogsViewStats);
 
 
 /* =========================
@@ -104,13 +114,13 @@ router.get("/analytics/blogs/views", /* getBlogsViewStats */);
 
 
 // report blog or comment
-router.post("/reports", /* createReport */);
+blog_router.post("/reports", createReport);
 
 // admin: list reports
-router.get("/reports", /* listReports */);
+blog_router.get("/reports", listReports);
 
 // admin: update report status
-router.put("/reports/:id/status", /* updateReportStatus */);
+blog_router.put("/reports/:id/status", updateReportStatus);
 
 
 
@@ -120,29 +130,29 @@ router.put("/reports/:id/status", /* updateReportStatus */);
 
 
 // get user interests
-router.get("/user/interests", /* getUserInterests */);
+blog_router.get("/user/interests", getUserInterests);
 
 // create user interests
-router.post("/user/interests", /* createUserInterests */);
+blog_router.post("/user/interests", createUserInterests);
 
 // update user interests
-router.put("/user/interests", /* updateUserInterests */);
+blog_router.put("/user/interests", updateUserInterests);
 
 
 /* =========================
    📊 Utility / Feed APIs
 ========================= */
 // personalized feed
-router.get("/feed", /* getFeed */);
+blog_router.get("/feed", geFeed);
 
 // search blogs
-router.get("/search/blogs", /* searchBlogs */);
+blog_router.get("/search/blogs", /* searchBlogs */);
 
 // list all tags
-router.get("/tags", /* getTags */);
+blog_router.get("/tags", /* getTags */);
 
 // list all categories
-router.get("/categories", /* getCategories */);
+blog_router.get("/categories", /* getCategories */);
 
 
 

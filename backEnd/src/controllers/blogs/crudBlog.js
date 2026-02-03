@@ -2,7 +2,9 @@ const jwt = require("jsonwebtoken");
 const Blog = require("../../models/blogs/blog");
 const UserInterest = require("../.blogs./models/userInterest");
 const BlogView = require('../../models/blogs/blogViews');
+const Report = require("../../models/blogs/report");
 const Reaction = require("../../models/blogs/reaction");
+const BlogInteraction = require("../models/BlogInteraction");
 const Comment = require('../../models/blogs/comment')
 
 const blog = require("../../models/blogs/blog");
@@ -580,7 +582,7 @@ const blogView = async(req,res)=>{
         blogId,
         {
           $inc: {
-            totalViews: 1,
+            duplicateViewsCount: 1,
             viewsCount: 1,
             trendingScore: 1   // keep simple for now
           },
@@ -592,10 +594,17 @@ const blogView = async(req,res)=>{
       );
     } else {
       // 5️⃣ Optional: still increment total views (not unique / trending)
+
+      if(Date.now()- existingView.createdAt < 30*60*1000){ // so that duplicate views within 30 mintues can't count
+        return res.status(200).json({
+          success: true,
+          viewed: true
+        }); 
+      }
       await Blog.findByIdAndUpdate(
         blogId,
         {
-          $inc: { totalViews: 1 },
+          $inc: { duplicateViewsCount: 1 },
           $set: { lastViewedAt: new Date() }
         }
       );
@@ -613,6 +622,7 @@ const blogView = async(req,res)=>{
 }
 
 // REACT ON BLOG Logged-in users only
+
 const reactionOnBlog = async (req, res) => {
   try {
     const blogId = req.params.blogId;
@@ -702,6 +712,8 @@ const getReactionPerType = async(req,res)=>{ // need to work on this functoin
 // ]
 
 };
+
+// comment related thing
 
 const commentOnBlog = async (req, res) => {
   try {
@@ -887,9 +899,620 @@ const deleteComment = async (req, res) => {
   }
 };
 
+// view related thing
+
+const trackBlogView = async (req, res) => {
+  try {
+    const blogId = req.params.id;
+    const userId = req.user?._id || null;
+    const ip = req.ip;
+    const userAgent = req.headers["user-agent"];
+
+    // Avoid duplicate views within 30 minutes
+    const recentView = await BlogView.findOne({
+      blogId,
+      $or: [
+        { userId, userId: { $ne: null } },
+        { ip }
+      ],
+      createdAt: { $gte: new Date(Date.now() - 30 * 60 * 1000) }
+    });
+
+    if (recentView) {
+      return res.status(200).json({ message: "View already counted" });
+    }
+
+    // Save view
+    await BlogView.create({
+      blogId,
+      userId,
+      ip,
+      userAgent
+    });
+
+    // Increment counter (fast read)
+    await Blog.findByIdAndUpdate(blogId, {
+      $inc: { views: 1 }
+    });
+
+    res.status(201).json({ message: "View tracked" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to track view" });
+  }
+};
+
+const getBlogViews = async (req, res) => {
+  try {
+    const blog = await Blog.findById(req.params.id)
+      .select("views title");
+
+    if (!blog) {
+      return res.status(404).json({ error: "Blog not found" });
+    }
+
+    res.json({
+      blogId: blog._id,
+      title: blog.title,
+      views: blog.views
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch views" });
+  }
+};
+
+const getBlogsViewStats = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    const match = {};
+    if (startDate && endDate) {
+      match.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+
+    const stats = await BlogView.aggregate([
+      { $match: match },
+
+      {
+        $group: {
+          _id: "$blogId",
+          views: { $sum: 1 }
+        }
+      },
+
+      {
+        $lookup: {
+          from: "blogs",
+          localField: "_id",
+          foreignField: "_id",
+          as: "blog"
+        }
+      },
+
+      { $unwind: "$blog" },
+
+      {
+        $project: {
+          _id: 0,
+          blogId: "$_id",
+          title: "$blog.title",
+          views: 1
+        }
+      },
+
+      { $sort: { views: -1 } }
+    ]);
+
+    res.json({
+      totalBlogs: stats.length,
+      stats
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch analytics" });
+  }
+};
+
+// report thing
+
+const createReport = async (req, res) => {
+  try {
+    const reporterId = req.user._id;
+    const { targetType, targetId, reason } = req.body;
+
+    if (!targetType || !targetId || !reason) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    // Validate target type
+    if (!["blog", "comment"].includes(targetType)) {
+      return res.status(400).json({ error: "Invalid target type" });
+    }
+
+    // Check target exists
+    const Model = targetType === "blog" ? Blog : Comment;
+    const target = await Model.findById(targetId);
+
+    if (!target) {
+      return res.status(404).json({ error: "Target not found" });
+    }
+
+    // Prevent duplicate reports by same user
+    const existingReport = await Report.findOne({
+      reporterId,
+      targetType,
+      targetId
+    });
+
+    if (existingReport) {
+      return res.status(409).json({
+        error: "You have already reported this content"
+      });
+    }
+
+    const report = await Report.create({
+      reporterId,
+      targetType,
+      targetId,
+      reason
+    });
+
+    res.status(201).json({
+      message: "Report submitted successfully",
+      reportId: report._id
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to submit report" });
+  }
+};
+
+const listReports = async (req, res) => {
+  try {
+    const { status, targetType, page = 1, limit = 20 } = req.query;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (targetType) filter.targetType = targetType;
+
+    const reports = await Report.find(filter)
+      .populate("reporterId", "name email")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(Number(limit));
+
+    const total = await Report.countDocuments(filter);
+
+    res.json({
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      reports
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch reports" });
+  }
+};
+
+const updateReportStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const reportId = req.params.id;
+
+    if (!["pending", "reviewed", "resolved"].includes(status)) {
+      return res.status(400).json({ error: "Invalid status" });
+    }
+
+    const report = await Report.findById(reportId);
+
+    if (!report) {
+      return res.status(404).json({ error: "Report not found" });
+    }
+
+    report.status = status;
+    await report.save();
+
+    res.json({
+      message: "Report status updated",
+      reportId: report._id,
+      status: report.status
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update status" });
+  }
+};
+
+// interest thing
+
+const getUserInterests = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const interests = await UserInterest.findOne({ userId });
+
+    if (!interests) {
+      return res.json({
+        tags: [],
+        categories: []
+      });
+    }
+
+    res.json({
+      tags: interests.tags,
+      categories: interests.categories,
+      lastInteractedAt: interests.lastInteractedAt
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch user interests" });
+  }
+};5
+
+const createUserInterests = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { tags = [], categories = [] } = req.body;
+
+    // Check if already exists
+    const existing = await UserInterest.findOne({ userId });
+    if (existing) {
+      return res.status(409).json({
+        error: "User interests already exist. Use update instead."
+      });
+    }
+
+    const interests = await UserInterest.create({
+      userId,
+      tags: [...new Set(tags)],
+      categories: [...new Set(categories)],
+      lastInteractedAt: new Date()
+    });
+
+    res.status(201).json({
+      message: "User interests created",
+      interests
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to create user interests" });
+  }
+};
+
+const updateUserInterests = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { tags, categories } = req.body;
+
+    const update = {
+      lastInteractedAt: new Date()
+    };
+
+    if (tags) {
+      update.tags = [...new Set(tags)];
+    }
+
+    if (categories) {
+      update.categories = [...new Set(categories)];
+    }
+
+    const interests = await UserInterest.findOneAndUpdate(
+      { userId },
+      { $set: update },
+      { new: true, upsert: true } // upsert -> update + insert // if present-> update or create automatically
+    );
+
+    res.json({
+      message: "User interests updated",
+      interests
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update user interests" });
+  }
+};
+
+// feed talk 
+
+const getTags = async (req, res) => {
+  try {
+    const tags = await Blog.distinct("tags", {
+      status: "published",
+      isDeleted: false
+    });
+
+    res.json({ tags });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch tags" });
+  }
+};
+
+const getCategories = async (req, res) => {
+  try {
+    const categories = await Blog.distinct("category", {
+      status: "published",
+      isDeleted: false
+    });
+
+    res.json({ categories });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch categories" });
+  }
+};
+
+/**
+ * FULLY SCALABLE BLOG SEARCH
+ * Supports:
+ * - keyword search
+ * - tags & categories filter
+ * - author filter
+ * - date range
+ * - pagination
+ * - sorting
+ * - fallback when no keyword
+ */
+
+
+const searchBlogs = async (req, res) => {
+  try {
+    const {
+      q,                 // keyword
+      tags,              // comma separated
+      category,          // single or comma separated
+      authorId,
+      startDate,
+      endDate,
+      sortBy = "relevance", // relevance | newest | views
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    const skip = (page - 1) * limit;
+
+    const filter = {
+      status: "published",
+      isDeleted: false
+    };
+
+    /* ---------------- DATE FILTER ---------------- */
+    if (startDate || endDate) {
+      filter.createdAt = {};
+      if (startDate) filter.createdAt.$gte = new Date(startDate);
+      if (endDate) filter.createdAt.$lte = new Date(endDate);
+    }
+
+    /* ---------------- AUTHOR FILTER ---------------- */
+    if (authorId) {
+      filter.authorId = authorId;
+    }
+
+    /* ---------------- TAG FILTER ---------------- */
+    if (tags) {
+      filter.tags = {
+        $in: tags.split(",").map(t => t.trim().toLowerCase())
+      };
+    }
+
+    /* ---------------- CATEGORY FILTER ---------------- */
+    if (category) {
+      filter.category = {
+        $in: category.split(",").map(c => c.trim().toLowerCase())
+      };
+    }
+
+    /* ---------------- TEXT SEARCH ---------------- */
+    let query = Blog.find(filter);
+
+    if (q) {
+      query = Blog.find({
+        ...filter,
+        $text: { $search: q }
+      }).select({
+        score: { $meta: "textScore" }
+      });
+    }
+
+    /* ---------------- SORTING ---------------- */
+    const sortMap = {
+      relevance: q ? { score: { $meta: "textScore" } } : { createdAt: -1 },
+      newest: { createdAt: -1 },
+      views: { views: -1 }
+    };
+
+    /* ---------------- EXECUTE QUERY ---------------- */
+    const blogs = await query
+      .sort(sortMap[sortBy])
+      .skip(skip)
+      .limit(Number(limit))
+      .populate("authorId", "name")
+      .lean();
+
+    /* ---------------- TOTAL COUNT ---------------- */
+    const total = q
+      ? await Blog.countDocuments({
+          ...filter,
+          $text: { $search: q }
+        })
+      : await Blog.countDocuments(filter);
+
+    res.json({
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / limit),
+      blogs
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Blog search failed" });
+  }
+};
+
+// get personalized feed
+
+const getFeed = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const limit = Number(req.query.limit) || 20;
+
+    /* ---------------- USER INTERESTS ---------------- */
+    const interests = await UserInterest.findOne({ userId }).lean();
+
+    const interestTags = interests?.tags || [];
+    const interestCategories = interests?.categories || [];
+
+    /* ---------------- USER INTERACTION HISTORY ---------------- */
+    const interactions = await BlogInteraction.aggregate([
+      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+      {
+        $group: {
+          _id: "$blogId",
+          likeScore: {
+            $sum: { $cond: [{ $eq: ["$type", "like"] }, 5, 0] }
+          },
+          commentScore: {
+            $sum: { $cond: [{ $eq: ["$type", "comment"] }, 7, 0] }
+          },
+          viewScore: {
+            $sum: { $cond: [{ $eq: ["$type", "view"] }, 1, 0] }
+          },
+          readTimeScore: {
+            $sum: {
+              $cond: [
+                { $eq: ["$type", "read"] },
+                { $divide: ["$duration", 30] },
+                0
+              ]
+            }
+          }
+        }
+      }
+    ]);
+
+    const interactionMap = {};
+    interactions.forEach(i => {
+      interactionMap[i._id.toString()] =
+        i.likeScore +
+        i.commentScore +
+        i.viewScore +
+        i.readTimeScore;
+    });
+
+    /* ---------------- BASE QUERY ---------------- */
+    const matchStage = {
+      status: "published",
+      isDeleted: false
+    };
+
+    if (interestTags.length || interestCategories.length) {
+      matchStage.$or = [
+        { tags: { $in: interestTags } },
+        { category: { $in: interestCategories } }
+      ];
+    }
+
+    /* ---------------- AGGREGATION PIPELINE ---------------- */
+    const blogs = await Blog.aggregate([
+      { $match: matchStage },
+
+      /* Interest match boost */
+      {
+        $addFields: {
+          interestScore: {
+            $add: [
+              {
+                $size: {
+                  $setIntersection: ["$tags", interestTags]
+                }
+              },
+              {
+                $cond: [
+                  { $in: ["$category", interestCategories] },
+                  3,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      },
+
+      /* Freshness score */
+      {
+        $addFields: {
+          freshnessScore: {
+            $divide: [
+              1,
+              {
+                $add: [
+                  {
+                    $divide: [
+                      { $subtract: [new Date(), "$createdAt"] },
+                      1000 * 60 * 60 * 24
+                    ]
+                  },
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      },
+
+      /* Popularity score */
+      {
+        $addFields: {
+          popularityScore: {
+            $add: [
+              { $multiply: ["$views", 0.3] },
+              { $multiply: ["$likes", 2] },
+              { $multiply: ["$commentsCount", 3] }
+            ]
+          }
+        }
+      },
+
+      /* Combine ALL scores */
+      {
+        $addFields: {
+          totalScore: {
+            $add: [
+              "$interestScore",
+              "$freshnessScore",
+              "$popularityScore"
+            ]
+          }
+        }
+      },
+
+      /* Sort by system score */
+      { $sort: { totalScore: -1 } },
+
+      { $limit: limit }
+    ]);
+
+    /* ---------------- APPLY USER BEHAVIOR BOOST ---------------- */
+    const rankedBlogs = blogs
+      .map(blog => {
+        const behaviorScore =
+          interactionMap[blog._id.toString()] || 0;
+
+        return {
+          ...blog,
+          finalScore: blog.totalScore + behaviorScore
+        };
+      })
+      .sort((a, b) => b.finalScore - a.finalScore);
+
+    res.json({
+      count: rankedBlogs.length,
+      blogs: rankedBlogs
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load personalized feed" });
+  }
+};
+
 
 module.exports = { createBlog, updateBlog, deleteBlog, readBlog , readBlogUsingSlug,
                     myBlog, publishBlog, unpublishBlog, getFeaturedBlogs, featureBlog,
                   unfeatureBlog, notPersonalisedFeed, trending, blogView, reactionOnBlog
                 , getReactionPerType, commentOnBlog, commentOnComment, getComments, updateComment
-               ,deleteComment};
+               ,deleteComment,getBlogViews, trackBlogView, getBlogsViewStats, createReport, 
+                listReports, updateReportStatus, getUserInterests, createUserInterests, updateUserInterests,
+                getTags, getCategories, getFeed, searchBlogs,getCategories, getTags };

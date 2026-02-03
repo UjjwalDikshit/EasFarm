@@ -78,10 +78,37 @@ const blogSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+
+/* ---------------- INDEXES ---------------- */
+
+// TEXT SEARCH (only ONE text index allowed)
+blogSchema.index(
+  {
+    title: "text",
+    content: "text",
+    tags: "text"
+  },
+  {
+    weights: {
+      title: 10,
+      tags: 5,
+      content: 1
+    }
+  }
+);
+
+// FILTER + SORT (feed, list, homepage)
 blogSchema.index({ status: 1, isDeleted: 1, publishedAt: -1 });
+
+// TRENDING
+blogSchema.index({ trendingScore: -1 });
+
+// FILTERS
+blogSchema.index({createdAt: -1});
 blogSchema.index({ tags: 1 });
 blogSchema.index({ category: 1 });
-blogSchema.index({ trendingScore: -1 });
+blogSchema.index({ authorId: 1 });
+blogSchema.index({ views: -1 });
 
 
 module.exports = mongoose.model("Blog", blogSchema);
