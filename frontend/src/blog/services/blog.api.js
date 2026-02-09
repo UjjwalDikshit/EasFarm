@@ -1,6 +1,6 @@
 // features/blog/services/blog.api.js
-import axios from "@/shared/lib/axios";
+import axiosClient from "../../utils/axiosClient";
 
 export const fetchBlogs = (params) => {
-  return axios.get("/blogs", { params });
+  return axiosClient.get("/blogs", { params });
 };

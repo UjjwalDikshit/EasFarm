@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import BlogCard from "../components/list/BlogCard";
 import BlogCardSkeleton from "../components/list/BlogCardSkeleton";
 import { useBlogs } from "../hooks/useBlogs";
+import { useBlogReaction } from "../hooks/useBlogReaction";
 
 const BlogListPage = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const { mutate: reactToBlog } = useBlogReaction();
 
   const {
     data: blogs,
@@ -13,9 +15,11 @@ const BlogListPage = () => {
     isError,
   } = useBlogs({ page, limit: 6, search, status: "published" });
 
-  const handleLike = (blogId) => {
-    // delegate to reaction hook later
-    console.log("like blog", blogId);
+  const handleReaction = (blogId) => {
+    reactToBlog({
+      blogId,
+      type: "like"
+    });
   };
 
   const handleCommentClick = (blogId) => {
@@ -56,7 +60,7 @@ const BlogListPage = () => {
             <BlogCard
               key={blog._id}
               blog={blog}
-              onLike={handleLike}
+              onLike={handleReaction}
               onCommentClick={handleCommentClick}
             />
           ))}

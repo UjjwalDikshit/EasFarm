@@ -2,11 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Heart, MessageCircle } from "lucide-react";
 
-const BlogCard = ({
-  blog,
-  onLike,
-  onCommentClick,
-}) => {
+const BlogCard = ({ blog, onReaction, onCommentClick }) => {
   const {
     _id,
     title,
@@ -17,7 +13,10 @@ const BlogCard = ({
     likesCount,
     commentsCount,
     publishedAt,
+    myReaction
   } = blog;
+
+  const isLiked = myReaction === "like";
 
   return (
     <article className="card bg-base-100 shadow-md hover:shadow-lg transition">
@@ -25,17 +24,9 @@ const BlogCard = ({
       {(coverImage || videoUrl) && (
         <figure className="max-h-64 overflow-hidden">
           {coverImage ? (
-            <img
-              src={coverImage}
-              alt={title}
-              className="w-full object-cover"
-            />
+            <img src={coverImage} alt={title} className="w-full object-cover" />
           ) : (
-            <video
-              src={videoUrl}
-              controls
-              className="w-full object-cover"
-            />
+            <video src={videoUrl} controls className="w-full object-cover" />
           )}
         </figure>
       )}
@@ -62,14 +53,21 @@ const BlogCard = ({
 
         {/* Actions */}
         <div className="card-actions justify-between mt-4">
+          {/* LIKE */}
           <button
-            className="btn btn-ghost btn-sm gap-1"
-            onClick={() => onLike(_id)}
+            className={`btn btn-ghost btn-sm gap-1 ${
+              isLiked ? "text-red-500" : ""
+            }`}
+            onClick={() => onReaction(_id, "like")}
           >
-            <Heart size={16} />
+            <Heart
+              size={16}
+              fill={isLiked ? "currentColor" : "none"}
+            />
             <span>{likesCount}</span>
           </button>
 
+          {/* COMMENT */}
           <button
             className="btn btn-ghost btn-sm gap-1"
             onClick={() => onCommentClick(_id)}
