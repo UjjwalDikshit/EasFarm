@@ -7,6 +7,8 @@ import { useBlogReaction } from "../hooks/useBlogReaction";
 const BlogListPage = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [openCommentBlogId, setOpenCommentBlogId] = useState(null);
+
   const { mutate: reactToBlog } = useBlogReaction();
 
   const {
@@ -18,13 +20,12 @@ const BlogListPage = () => {
   const handleReaction = (blogId) => {
     reactToBlog({
       blogId,
-      type: "like"
+      type: "like",
     });
   };
 
   const handleCommentClick = (blogId) => {
-    // open comment modal / drawer
-    console.log("open comments for", blogId);
+    setOpenCommentBlogId((prev) => (prev === blogId ? null : blogId));
   };
 
   return (
@@ -57,12 +58,15 @@ const BlogListPage = () => {
 
         {!isLoading &&
           blogs?.map((blog) => (
-            <BlogCard
-              key={blog._id}
-              blog={blog}
-              onLike={handleReaction}
-              onCommentClick={handleCommentClick}
-            />
+            <div key={blog._id}>
+              <BlogCard
+                key={blog._id}
+                blog={blog}
+                onLike={handleReaction}
+                onCommentClick={handleCommentClick}
+                isCommentOpen={openCommentBlogId === blog._id}
+              />
+            </div>
           ))}
       </div>
 

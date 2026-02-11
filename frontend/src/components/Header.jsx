@@ -34,7 +34,7 @@ const Header = () => {
         <nav className="menu menu-horizontal px-1 mr-4">
           <ul className="flex items-center space-x-2">
             <li><a className="font-medium hover:bg-primary-focus rounded-btn" onClick={() => navigate('/')}>Home</a></li>
-            <li><a className="font-medium hover:bg-primary-focus rounded-btn">Blogs</a></li>
+            <li><a className="font-medium hover:bg-primary-focus rounded-btn" onClick={() => navigate('/blog')}>Blogs</a></li>
             <li><a className="font-medium hover:bg-primary-focus rounded-btn">Pricing</a></li>
             <li><a className="font-medium hover:bg-primary-focus rounded-btn" onClick={() => navigate('/about')}>About</a></li>
             <li><a className="font-medium hover:bg-primary-focus rounded-btn">{<WeatherButton/>}</a></li>

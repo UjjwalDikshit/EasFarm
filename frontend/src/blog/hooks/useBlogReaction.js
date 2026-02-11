@@ -20,7 +20,7 @@ export const useBlogReaction = () => {
       previousBlogs.forEach(([queryKey, blogs]) => {
         if (!Array.isArray(blogs)) return;
 
-        queryClient.setQueryData(queryKey, old =>
+        queryClient.setQueryData(queryKey, old => // old is old cached data for this query key
           old.map(blog => {
             if (blog._id !== blogId) return blog;
 
