@@ -6,7 +6,6 @@ const blogSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
 
     title: {
@@ -34,20 +33,17 @@ const blogSchema = new mongoose.Schema(
       {
         type: String,
         lowercase: true,
-        index: true,
       },
     ],
 
     category: {
       type: String,
-      index: true,
     },
 
     status: {
       type: String,
       enum: ["draft", "published", "archived"],
       default: "draft",
-      index: true,
     },
 
     isFeatured: {
@@ -58,7 +54,6 @@ const blogSchema = new mongoose.Schema(
     isDeleted: {
       type: Boolean,
       default: false,
-      index: true,
     },
 
     deletedAt: {
@@ -71,7 +66,7 @@ const blogSchema = new mongoose.Schema(
     likesCount: { type: Number, default: 0 },
     commentsCount: { type: Number, default: 0 },
 
-    trendingScore: { type: Number, default: 0, index: true },
+    trendingScore: { type: Number, default: 0 },
 
     publishedAt: Date,
   },
@@ -97,18 +92,13 @@ blogSchema.index(
   }
 );
 
-// FILTER + SORT (feed, list, homepage)
 blogSchema.index({ status: 1, isDeleted: 1, publishedAt: -1 });
-
-// TRENDING
 blogSchema.index({ trendingScore: -1 });
-
-// FILTERS
-blogSchema.index({createdAt: -1});
+blogSchema.index({ createdAt: -1 });
 blogSchema.index({ tags: 1 });
 blogSchema.index({ category: 1 });
 blogSchema.index({ authorId: 1 });
-blogSchema.index({ views: -1 });
+blogSchema.index({ viewsCount: -1 });
 
 
 module.exports = mongoose.model("Blog", blogSchema);

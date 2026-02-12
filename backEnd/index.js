@@ -7,7 +7,7 @@ const queryChat = require('./src/routes/aiChat');
 const weather = require('./src/routes/weatherData');
 // const startTrendingDecay = require("./src/cron/trendingDecay.cron");
 
-// const blog = require('./src/routes/blog');
+const blog = require('./src/routes/blog.JustToAdressjs');
 const dbConnect = require('./src/config/db');
 const cookieParser = require('cookie-parser');
 const payment = require('./src/routes/payment');
@@ -35,7 +35,7 @@ app.use('/service',service);
 app.use('/api',weather); 
 app.use('/payment',payment); // write here
 app.use('/query',queryChat);
-// app.use('/blog',blog);
+app.use('/blog',blog);
 
 
 

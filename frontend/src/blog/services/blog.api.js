@@ -2,5 +2,5 @@
 import axiosClient from "../../utils/axiosClient";
 
 export const fetchBlogs = (params) => {
-  return axiosClient.get("/blogs", { params });
+  return axiosClient.get("/blog/feed", { params });
 };

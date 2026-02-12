@@ -3,7 +3,7 @@ const Farmer = require('../models/farmerSchema');
 const redisClient = require('../config/redis');
 
 
-const authMiddleware = async(req, res, next) => {
+const validUser = async(req, res, next) => {
     try {
         const token = req.cookies.token;
 
@@ -51,4 +51,4 @@ const authMiddleware = async(req, res, next) => {
     }
 };
 
-module.exports = authMiddleware;
+module.exports = validUser;

@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import commentAPI from "../api/commentAPI";
+import * as commentAPI from "../services/comment.api";
 
 export const useReplies = (commentId) => {
   return useInfiniteQuery({

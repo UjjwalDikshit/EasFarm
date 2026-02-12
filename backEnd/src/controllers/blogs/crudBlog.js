@@ -1,19 +1,19 @@
 const jwt = require("jsonwebtoken");
+const mongoose = require('mongoose');
 const Blog = require("../../models/blogs/blog");
-const UserInterest = require("../.blogs./models/userInterest");
-const BlogView = require('../../models/blogs/blogViews');
+const UserInterest = require("../../models/blogs/userInterest");
+const BlogView = require("../../models/blogs/blogViews");
 const Report = require("../../models/blogs/report");
 const Reaction = require("../../models/blogs/reaction");
-const BlogInteraction = require("../models/BlogInteraction");
-const Comment = require('../../models/blogs/comment')
+const BlogInteraction = require("../../models/blogs/BlogInteration");
+const Comment = require("../../models/blogs/comment");
 
 const blog = require("../../models/blogs/blog");
-
 
 const createBlog = async (req, res) => {
   try {
     const {
-      authorId, // ideally from req.user._id
+      authorId = req.user._id,
       title,
       slug,
       content,
@@ -180,39 +180,36 @@ const deleteBlog = async (req, res) => {
   }
 };
 
-
 const readBlog = async (req, res) => {
   try {
     const { id } = req.params;
 
     const blog = await Blog.findOne({
       _id: id,
-      isDeleted: false
+      isDeleted: false,
     });
 
     if (!blog) {
       return res.status(404).json({
         success: false,
-        message: "Blog not found"
+        message: "Blog not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Blog fetched successfully",
-      data: blog
+      data: blog,
     });
-
   } catch (error) {
     console.error("Read blog error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch blog"
+      message: "Failed to fetch blog",
     });
   }
 };
-
 
 const readBlogUsingSlug = async (req, res) => {
   try {
@@ -221,28 +218,27 @@ const readBlogUsingSlug = async (req, res) => {
     const blog = await Blog.findOne({
       slug,
       isDeleted: false,
-      status: "published"   // important
+      status: "published", // important
     });
 
     if (!blog) {
       return res.status(404).json({
         success: false,
-        message: "Blog not found"
+        message: "Blog not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Blog fetched successfully",
-      data: blog
+      data: blog,
     });
-
   } catch (error) {
     console.error("Read blog by slug error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch blog"
+      message: "Failed to fetch blog",
     });
   }
 };
@@ -255,7 +251,7 @@ const myBlog = async (req, res) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Unauthorized"
+        message: "Unauthorized",
       });
     }
 
@@ -264,21 +260,20 @@ const myBlog = async (req, res) => {
 
     const blogs = await Blog.find({
       authorId,
-      isDeleted: false
+      isDeleted: false,
     }).sort({ createdAt: -1 });
 
     return res.status(200).json({
       success: true,
       message: "My blogs fetched successfully",
-      data: blogs
+      data: blogs,
     });
-
   } catch (error) {
     console.error("My blogs error:", error);
 
     return res.status(401).json({
       success: false,
-      message: "Invalid or expired token"
+      message: "Invalid or expired token",
     });
   }
 };
@@ -290,36 +285,35 @@ const publishBlog = async (req, res) => {
     const blog = await Blog.findOneAndUpdate(
       {
         _id: id,
-        isDeleted: false
+        isDeleted: false,
       },
       {
         $set: {
           status: "published",
-          publishedAt: new Date()
-        }
+          publishedAt: new Date(),
+        },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!blog) {
       return res.status(404).json({
         success: false,
-        message: "Blog not found"
+        message: "Blog not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Blog published successfully",
-      data: blog
+      data: blog,
     });
-
   } catch (error) {
     console.error("Publish blog error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to publish blog"
+      message: "Failed to publish blog",
     });
   }
 };
@@ -331,47 +325,45 @@ const unpublishBlog = async (req, res) => {
     const blog = await Blog.findOneAndUpdate(
       {
         _id: id,
-        isDeleted: false
+        isDeleted: false,
       },
       {
         $set: {
           status: "draft",
-          publishedAt: null
-        }
+          publishedAt: null,
+        },
       },
-      { new: true }
+      { new: true },
     );
 
     if (!blog) {
       return res.status(404).json({
         success: false,
-        message: "Blog not found"
+        message: "Blog not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Blog moved to draft successfully",
-      data: blog
+      data: blog,
     });
-
   } catch (error) {
     console.error("Unpublish blog error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to unpublish blog"
+      message: "Failed to unpublish blog",
     });
   }
 };
-
 
 const getFeaturedBlogs = async (req, res) => {
   try {
     const blogs = await Blog.find({
       isFeatured: true,
       isDeleted: false,
-      status: "published"
+      status: "published",
     })
       .sort({ publishedAt: -1 })
       .limit(10);
@@ -379,15 +371,14 @@ const getFeaturedBlogs = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Featured blogs fetched successfully",
-      data: blogs
+      data: blogs,
     });
-
   } catch (error) {
     console.error("Featured blogs error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to fetch featured blogs"
+      message: "Failed to fetch featured blogs",
     });
   }
 };
@@ -399,27 +390,26 @@ const featureBlog = async (req, res) => {
     const blog = await Blog.findOneAndUpdate(
       { _id: id, isDeleted: false },
       { $set: { isFeatured: true } },
-      { new: true }
+      { new: true },
     );
 
     if (!blog) {
       return res.status(404).json({
         success: false,
-        message: "Blog not found"
+        message: "Blog not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Blog marked as featured",
-      data: blog
+      data: blog,
     });
-
   } catch (error) {
     console.error("Feature blog error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to feature blog"
+      message: "Failed to feature blog",
     });
   }
 };
@@ -431,33 +421,31 @@ const unfeatureBlog = async (req, res) => {
     const blog = await Blog.findOneAndUpdate(
       { _id: id, isDeleted: false },
       { $set: { isFeatured: false } },
-      { new: true }
+      { new: true },
     );
 
     if (!blog) {
       return res.status(404).json({
         success: false,
-        message: "Blog not found"
+        message: "Blog not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Blog removed from featured",
-      data: blog
+      data: blog,
     });
-
   } catch (error) {
     console.error("Unfeature blog error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to unfeature blog"
+      message: "Failed to unfeature blog",
     });
   }
 };
 
-const notPersonalisedFeed = async(req,res)=>{
-
+const notPersonalisedFeed = async (req, res) => {
   try {
     // 1 Get userId (from auth middleware)
     const userId = req.user._id;
@@ -471,13 +459,13 @@ const notPersonalisedFeed = async(req,res)=>{
     // fallback if no interests
     let matchQuery = {
       status: "published",
-      isDeleted: false
+      isDeleted: false,
     };
 
     if (interest) {
       matchQuery.$or = [
         { tags: { $in: interest.tags || [] } },
-        { category: { $in: interest.categories || [] } }
+        { category: { $in: interest.categories || [] } },
       ];
     }
 
@@ -496,18 +484,16 @@ const notPersonalisedFeed = async(req,res)=>{
       limit,
       total,
       hasMore: skip + blogs.length < total,
-      data: blogs
+      data: blogs,
     });
-
   } catch (error) {
     console.error("Feed error:", error);
     return res.status(500).json({
       success: false,
-      message: "Failed to load feed"
+      message: "Failed to load feed",
     });
   }
 };
-
 
 const trending = async (req, res) => {
   try {
@@ -517,11 +503,11 @@ const trending = async (req, res) => {
 
     const matchQuery = {
       status: "published",
-      isDeleted: false
+      isDeleted: false,
     };
 
     const blogs = await Blog.find(matchQuery)
-      .sort({ trendingScore: -1 }) 
+      .sort({ trendingScore: -1 })
       .skip(skip)
       .limit(limit)
       .select("title slug coverImage category tags publishedAt trendingScore");
@@ -534,22 +520,21 @@ const trending = async (req, res) => {
       limit,
       total,
       hasMore: skip + blogs.length < total,
-      data: blogs
+      data: blogs,
     });
-
   } catch (error) {
     console.error("Trending feed error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to load trending blogs"
+      message: "Failed to load trending blogs",
     });
   }
 };
 
-const blogView = async(req,res)=>{
-    // blogView unique + duplicate handler
-    try {
+const blogView = async (req, res) => {
+  // blogView unique + duplicate handler
+  try {
     const blogId = req.params.blogId;
     const userId = req.user?.id || null;
     const ipAddress = req.ip;
@@ -562,9 +547,7 @@ const blogView = async(req,res)=>{
     }
 
     // 2️⃣ Check if this user / IP already viewed
-    const viewQuery = userId
-      ? { blogId, userId }
-      : { blogId, ipAddress };
+    const viewQuery = userId ? { blogId, userId } : { blogId, ipAddress };
 
     const existingView = await BlogView.findOne(viewQuery);
 
@@ -574,7 +557,7 @@ const blogView = async(req,res)=>{
         blogId,
         userId,
         ipAddress,
-        userAgent
+        userAgent,
       });
 
       // 4️⃣ Increment blog counters atomically
@@ -584,42 +567,39 @@ const blogView = async(req,res)=>{
           $inc: {
             duplicateViewsCount: 1,
             viewsCount: 1,
-            trendingScore: 1   // keep simple for now
+            trendingScore: 1, // keep simple for now
           },
           $set: {
-            lastViewedAt: new Date()
-          }
+            lastViewedAt: new Date(),
+          },
         },
-        { new: false }
+        { new: false },
       );
     } else {
       // 5️⃣ Optional: still increment total views (not unique / trending)
 
-      if(Date.now()- existingView.createdAt < 30*60*1000){ // so that duplicate views within 30 mintues can't count
+      if (Date.now() - existingView.createdAt < 30 * 60 * 1000) {
+        // so that duplicate views within 30 mintues can't count
         return res.status(200).json({
           success: true,
-          viewed: true
-        }); 
+          viewed: true,
+        });
       }
-      await Blog.findByIdAndUpdate(
-        blogId,
-        {
-          $inc: { duplicateViewsCount: 1 },
-          $set: { lastViewedAt: new Date() }
-        }
-      );
+      await Blog.findByIdAndUpdate(blogId, {
+        $inc: { duplicateViewsCount: 1 },
+        $set: { lastViewedAt: new Date() },
+      });
     }
 
     return res.status(200).json({
       success: true,
-      viewed: true
+      viewed: true,
     });
-
   } catch (error) {
     console.error("Blog view error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
-}
+};
 
 // REACT ON BLOG Logged-in users only
 
@@ -641,13 +621,12 @@ const reactionOnBlog = async (req, res) => {
       await Reaction.deleteOne({ _id: existingReaction._id });
 
       await Blog.findByIdAndUpdate(blogId, {
-        $inc: { likesCount: -1, trendingScore: -3 }
-        
+        $inc: { likesCount: -1, trendingScore: -3 },
       });
 
       return res.status(200).json({
         reacted: false,
-        reaction: null
+        reaction: null,
       });
     }
 
@@ -655,13 +634,13 @@ const reactionOnBlog = async (req, res) => {
     if (existingReaction) {
       await Reaction.updateOne(
         { _id: existingReaction._id },
-        { $set: { type } }
+        { $set: { type } },
       );
 
       // likesCount stays same
       return res.status(200).json({
         reacted: true,
-        reaction: type
+        reaction: type,
       });
     }
 
@@ -669,18 +648,17 @@ const reactionOnBlog = async (req, res) => {
     await Reaction.create({
       blogId,
       userId,
-      type
+      type,
     });
 
     await Blog.findByIdAndUpdate(blogId, {
-      $inc: { likesCount: 1 , trendingScore: 3}
+      $inc: { likesCount: 1, trendingScore: 3 },
     });
 
     return res.status(200).json({
       reacted: true,
-      reaction: type
+      reaction: type,
     });
-
   } catch (error) {
     console.error("Reaction error:", error);
 
@@ -693,24 +671,24 @@ const reactionOnBlog = async (req, res) => {
   }
 };
 
-const getReactionPerType = async(req,res)=>{ // need to work on this functoin
-    //   Reaction.aggregate([
-    //   { $match: { blogId: mongoose.Types.ObjectId(blogId) } },
-    //   {
-    //     $group: {
-    //       _id: "$type",
-    //       count: { $sum: 1 }
-    //     }
-    //   }
-    // ]);
+const getReactionPerType = async (req, res) => {
+  // need to work on this functoin
+  //   Reaction.aggregate([
+  //   { $match: { blogId: mongoose.Types.ObjectId(blogId) } },
+  //   {
+  //     $group: {
+  //       _id: "$type",
+  //       count: { $sum: 1 }
+  //     }
+  //   }
+  // ]);
   return res.json("First complete this function");
-// **response
-// [
-//   { "_id": "like", "count": 42 },
-//   { "_id": "clap", "count": 31 },
-//   { "_id": "love", "count": 18 }
-// ]
-
+  // **response
+  // [
+  //   { "_id": "like", "count": 42 },
+  //   { "_id": "clap", "count": 31 },
+  //   { "_id": "love", "count": 18 }
+  // ]
 };
 
 // comment related thing
@@ -729,19 +707,18 @@ const commentOnBlog = async (req, res) => {
       blogId,
       userId,
       content: content.trim(),
-      parentCommentId: null
+      parentCommentId: null,
     });
 
     // Optional: increment comment count on blog
     await Blog.findByIdAndUpdate(blogId, {
-      $inc: { commentsCount: 1,trendingScore: 5 }
+      $inc: { commentsCount: 1, trendingScore: 5 },
     });
 
     return res.status(201).json({
       success: true,
-      comment
+      comment,
     });
-
   } catch (error) {
     console.error("Comment on blog error:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -761,7 +738,7 @@ const commentOnComment = async (req, res) => {
     // Ensure parent comment exists & not deleted
     const parentComment = await Comment.findOne({
       _id: commentId,
-      isDeleted: false
+      isDeleted: false,
     }).select("blogId");
 
     if (!parentComment) {
@@ -772,19 +749,17 @@ const commentOnComment = async (req, res) => {
       blogId: parentComment.blogId,
       userId,
       content: content.trim(),
-      parentCommentId: commentId
+      parentCommentId: commentId,
     });
 
     await Comment.findByIdAndUpdate(commentId, {
-      $inc: { repliesCount: 1 }
+      $inc: { repliesCount: 1 },
     });
-
 
     return res.status(201).json({
       success: true,
-      comment: reply
+      comment: reply,
     });
-
   } catch (error) {
     console.error("Comment on comment error:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -801,7 +776,7 @@ const getComments = async (req, res) => {
     const comments = await Comment.find({
       blogId,
       parentCommentId: null,
-      isDeleted: false
+      isDeleted: false,
     })
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -811,16 +786,15 @@ const getComments = async (req, res) => {
     const total = await Comment.countDocuments({
       blogId,
       parentCommentId: null,
-      isDeleted: false
+      isDeleted: false,
     });
 
     return res.status(200).json({
       page,
       limit,
       total,
-      comments
+      comments,
     });
-
   } catch (error) {
     console.error("Get comments error:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -840,11 +814,13 @@ const updateComment = async (req, res) => {
     const comment = await Comment.findOne({
       _id: commentId,
       userId,
-      isDeleted: false
+      isDeleted: false,
     });
 
     if (!comment) {
-      return res.status(404).json({ message: "Comment not found or unauthorized" });
+      return res
+        .status(404)
+        .json({ message: "Comment not found or unauthorized" });
     }
 
     // Add edit window (LinkedIn-style)
@@ -852,7 +828,7 @@ const updateComment = async (req, res) => {
 
     if (Date.now() - comment.createdAt.getTime() > EDIT_WINDOW_MS) {
       return res.status(403).json({
-        message: "Editing window expired"
+        message: "Editing window expired",
       });
     }
 
@@ -861,9 +837,8 @@ const updateComment = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      comment
+      comment,
     });
-
   } catch (error) {
     console.error("Update comment error:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -878,11 +853,13 @@ const deleteComment = async (req, res) => {
     const comment = await Comment.findOne({
       _id: commentId,
       userId,
-      isDeleted: false
+      isDeleted: false,
     });
 
     if (!comment) {
-      return res.status(404).json({ message: "Comment not found or unauthorized" });
+      return res
+        .status(404)
+        .json({ message: "Comment not found or unauthorized" });
     }
 
     comment.isDeleted = true;
@@ -890,9 +867,8 @@ const deleteComment = async (req, res) => {
     await comment.save();
 
     return res.status(200).json({
-      success: true
+      success: true,
     });
-
   } catch (error) {
     console.error("Delete comment error:", error);
     return res.status(500).json({ message: "Internal server error" });
@@ -911,11 +887,8 @@ const trackBlogView = async (req, res) => {
     // Avoid duplicate views within 30 minutes
     const recentView = await BlogView.findOne({
       blogId,
-      $or: [
-        { userId, userId: { $ne: null } },
-        { ip }
-      ],
-      createdAt: { $gte: new Date(Date.now() - 30 * 60 * 1000) }
+      $or: [{ userId, userId: { $ne: null } }, { ip }],
+      createdAt: { $gte: new Date(Date.now() - 30 * 60 * 1000) },
     });
 
     if (recentView) {
@@ -927,12 +900,12 @@ const trackBlogView = async (req, res) => {
       blogId,
       userId,
       ip,
-      userAgent
+      userAgent,
     });
 
     // Increment counter (fast read)
     await Blog.findByIdAndUpdate(blogId, {
-      $inc: { views: 1 }
+      $inc: { views: 1 },
     });
 
     res.status(201).json({ message: "View tracked" });
@@ -943,8 +916,7 @@ const trackBlogView = async (req, res) => {
 
 const getBlogViews = async (req, res) => {
   try {
-    const blog = await Blog.findById(req.params.id)
-      .select("views title");
+    const blog = await Blog.findById(req.params.id).select("views title");
 
     if (!blog) {
       return res.status(404).json({ error: "Blog not found" });
@@ -953,7 +925,7 @@ const getBlogViews = async (req, res) => {
     res.json({
       blogId: blog._id,
       title: blog.title,
-      views: blog.views
+      views: blog.views,
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch views" });
@@ -968,7 +940,7 @@ const getBlogsViewStats = async (req, res) => {
     if (startDate && endDate) {
       match.createdAt = {
         $gte: new Date(startDate),
-        $lte: new Date(endDate)
+        $lte: new Date(endDate),
       };
     }
 
@@ -978,8 +950,8 @@ const getBlogsViewStats = async (req, res) => {
       {
         $group: {
           _id: "$blogId",
-          views: { $sum: 1 }
-        }
+          views: { $sum: 1 },
+        },
       },
 
       {
@@ -987,8 +959,8 @@ const getBlogsViewStats = async (req, res) => {
           from: "blogs",
           localField: "_id",
           foreignField: "_id",
-          as: "blog"
-        }
+          as: "blog",
+        },
       },
 
       { $unwind: "$blog" },
@@ -998,16 +970,16 @@ const getBlogsViewStats = async (req, res) => {
           _id: 0,
           blogId: "$_id",
           title: "$blog.title",
-          views: 1
-        }
+          views: 1,
+        },
       },
 
-      { $sort: { views: -1 } }
+      { $sort: { views: -1 } },
     ]);
 
     res.json({
       totalBlogs: stats.length,
-      stats
+      stats,
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch analytics" });
@@ -1042,12 +1014,12 @@ const createReport = async (req, res) => {
     const existingReport = await Report.findOne({
       reporterId,
       targetType,
-      targetId
+      targetId,
     });
 
     if (existingReport) {
       return res.status(409).json({
-        error: "You have already reported this content"
+        error: "You have already reported this content",
       });
     }
 
@@ -1055,12 +1027,12 @@ const createReport = async (req, res) => {
       reporterId,
       targetType,
       targetId,
-      reason
+      reason,
     });
 
     res.status(201).json({
       message: "Report submitted successfully",
-      reportId: report._id
+      reportId: report._id,
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to submit report" });
@@ -1087,7 +1059,7 @@ const listReports = async (req, res) => {
       total,
       page: Number(page),
       limit: Number(limit),
-      reports
+      reports,
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch reports" });
@@ -1115,7 +1087,7 @@ const updateReportStatus = async (req, res) => {
     res.json({
       message: "Report status updated",
       reportId: report._id,
-      status: report.status
+      status: report.status,
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to update status" });
@@ -1133,19 +1105,19 @@ const getUserInterests = async (req, res) => {
     if (!interests) {
       return res.json({
         tags: [],
-        categories: []
+        categories: [],
       });
     }
 
     res.json({
       tags: interests.tags,
       categories: interests.categories,
-      lastInteractedAt: interests.lastInteractedAt
+      lastInteractedAt: interests.lastInteractedAt,
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch user interests" });
   }
-};5
+};
 
 const createUserInterests = async (req, res) => {
   try {
@@ -1156,7 +1128,7 @@ const createUserInterests = async (req, res) => {
     const existing = await UserInterest.findOne({ userId });
     if (existing) {
       return res.status(409).json({
-        error: "User interests already exist. Use update instead."
+        error: "User interests already exist. Use update instead.",
       });
     }
 
@@ -1164,15 +1136,15 @@ const createUserInterests = async (req, res) => {
       userId,
       tags: [...new Set(tags)],
       categories: [...new Set(categories)],
-      lastInteractedAt: new Date()
+      lastInteractedAt: new Date(),
     });
 
     res.status(201).json({
       message: "User interests created",
-      interests
+      interests,
     });
   } catch (err) {
-    res.status(500).json({ error: "Failed to create user interests" });
+    res.status(500).json({ error: "Failed to create user interests", err });
   }
 };
 
@@ -1182,7 +1154,7 @@ const updateUserInterests = async (req, res) => {
     const { tags, categories } = req.body;
 
     const update = {
-      lastInteractedAt: new Date()
+      lastInteractedAt: new Date(),
     };
 
     if (tags) {
@@ -1196,25 +1168,25 @@ const updateUserInterests = async (req, res) => {
     const interests = await UserInterest.findOneAndUpdate(
       { userId },
       { $set: update },
-      { new: true, upsert: true } // upsert -> update + insert // if present-> update or create automatically
+      { new: true, upsert: true }, // upsert -> update + insert // if present-> update or create automatically
     );
 
     res.json({
       message: "User interests updated",
-      interests
+      interests,
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to update user interests" });
   }
 };
 
-// feed talk 
+// feed talk
 
 const getTags = async (req, res) => {
   try {
     const tags = await Blog.distinct("tags", {
       status: "published",
-      isDeleted: false
+      isDeleted: false,
     });
 
     res.json({ tags });
@@ -1227,7 +1199,7 @@ const getCategories = async (req, res) => {
   try {
     const categories = await Blog.distinct("category", {
       status: "published",
-      isDeleted: false
+      isDeleted: false,
     });
 
     res.json({ categories });
@@ -1248,26 +1220,25 @@ const getCategories = async (req, res) => {
  * - fallback when no keyword
  */
 
-
 const searchBlogs = async (req, res) => {
   try {
     const {
-      q,                 // keyword
-      tags,              // comma separated
-      category,          // single or comma separated
+      q, // keyword
+      tags, // comma separated
+      category, // single or comma separated
       authorId,
       startDate,
       endDate,
       sortBy = "relevance", // relevance | newest | views
       page = 1,
-      limit = 20
+      limit = 20,
     } = req.query;
 
     const skip = (page - 1) * limit;
 
     const filter = {
       status: "published",
-      isDeleted: false
+      isDeleted: false,
     };
 
     /* ---------------- DATE FILTER ---------------- */
@@ -1285,14 +1256,14 @@ const searchBlogs = async (req, res) => {
     /* ---------------- TAG FILTER ---------------- */
     if (tags) {
       filter.tags = {
-        $in: tags.split(",").map(t => t.trim().toLowerCase())
+        $in: tags.split(",").map((t) => t.trim().toLowerCase()),
       };
     }
 
     /* ---------------- CATEGORY FILTER ---------------- */
     if (category) {
       filter.category = {
-        $in: category.split(",").map(c => c.trim().toLowerCase())
+        $in: category.split(",").map((c) => c.trim().toLowerCase()),
       };
     }
 
@@ -1302,9 +1273,9 @@ const searchBlogs = async (req, res) => {
     if (q) {
       query = Blog.find({
         ...filter,
-        $text: { $search: q }
+        $text: { $search: q },
       }).select({
-        score: { $meta: "textScore" }
+        score: { $meta: "textScore" },
       });
     }
 
@@ -1312,7 +1283,7 @@ const searchBlogs = async (req, res) => {
     const sortMap = {
       relevance: q ? { score: { $meta: "textScore" } } : { createdAt: -1 },
       newest: { createdAt: -1 },
-      views: { views: -1 }
+      views: { views: -1 },
     };
 
     /* ---------------- EXECUTE QUERY ---------------- */
@@ -1327,7 +1298,7 @@ const searchBlogs = async (req, res) => {
     const total = q
       ? await Blog.countDocuments({
           ...filter,
-          $text: { $search: q }
+          $text: { $search: q },
         })
       : await Blog.countDocuments(filter);
 
@@ -1336,14 +1307,14 @@ const searchBlogs = async (req, res) => {
       limit: Number(limit),
       total,
       totalPages: Math.ceil(total / limit),
-      blogs
+      blogs,
     });
   } catch (err) {
     res.status(500).json({ error: "Blog search failed" });
   }
 };
 
-// get personalized feed
+// get personalized feed, need to add paging
 
 const getFeed = async (req, res) => {
   try {
@@ -1358,7 +1329,7 @@ const getFeed = async (req, res) => {
 
     /* ---------------- USER INTERACTION HISTORY ---------------- */
     const interactions = await BlogInteraction.aggregate([
-      { $match: { userId: new mongoose.Types.ObjectId(userId) } },
+      { $match: { userId: userId } },
       {
         $group: {
           _id: "$blogId",
@@ -1393,7 +1364,7 @@ const getFeed = async (req, res) => {
         i.readTimeScore;
     });
 
-    /* ---------------- BASE QUERY ---------------- */
+    /* ---------------- BASE MATCH ---------------- */
     const matchStage = {
       status: "published",
       isDeleted: false
@@ -1406,11 +1377,11 @@ const getFeed = async (req, res) => {
       ];
     }
 
-    /* ---------------- AGGREGATION PIPELINE ---------------- */
+    /* ---------------- AGGREGATION ---------------- */
     const blogs = await Blog.aggregate([
       { $match: matchStage },
 
-      /* Interest match boost */
+      /* ---------------- INTEREST SCORE ---------------- */
       {
         $addFields: {
           interestScore: {
@@ -1432,7 +1403,7 @@ const getFeed = async (req, res) => {
         }
       },
 
-      /* Freshness score */
+      /* ---------------- FRESHNESS SCORE ---------------- */
       {
         $addFields: {
           freshnessScore: {
@@ -1454,20 +1425,20 @@ const getFeed = async (req, res) => {
         }
       },
 
-      /* Popularity score */
+      /* ---------------- POPULARITY SCORE ---------------- */
       {
         $addFields: {
           popularityScore: {
             $add: [
-              { $multiply: ["$views", 0.3] },
-              { $multiply: ["$likes", 2] },
-              { $multiply: ["$commentsCount", 3] }
+              { $multiply: [{ $ifNull: ["$viewsCount", 0] }, 0.3] },
+              { $multiply: [{ $ifNull: ["$likesCount", 0] }, 2] },
+              { $multiply: [{ $ifNull: ["$commentsCount", 0] }, 3] }
             ]
           }
         }
       },
 
-      /* Combine ALL scores */
+      /* ---------------- TOTAL SYSTEM SCORE ---------------- */
       {
         $addFields: {
           totalScore: {
@@ -1480,13 +1451,47 @@ const getFeed = async (req, res) => {
         }
       },
 
-      /* Sort by system score */
-      { $sort: { totalScore: -1 } },
+      /* ---------------- USER REACTION LOOKUP ---------------- */
+      {
+        $lookup: {
+          from: "bloginteractions",
+          let: { blogId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$blogId", "$$blogId"] },
+                    { $eq: ["$userId", userId] },
+                    { $in: ["$type", ["like", "clap", "love"]] }
+                  ]
+                }
+              }
+            },
+            { $limit: 1 }
+          ],
+          as: "myReactionData"
+        }
+      },
+      {
+        $addFields: {
+          myReaction: {
+            $arrayElemAt: ["$myReactionData.type", 0]
+          }
+        }
+      },
+      {
+        $project: {
+          myReactionData: 0
+        }
+      },
 
+      /* ---------------- SORT + LIMIT ---------------- */
+      { $sort: { totalScore: -1 } },
       { $limit: limit }
     ]);
 
-    /* ---------------- APPLY USER BEHAVIOR BOOST ---------------- */
+    /* ---------------- APPLY BEHAVIOR BOOST ---------------- */
     const rankedBlogs = blogs
       .map(blog => {
         const behaviorScore =
@@ -1494,25 +1499,61 @@ const getFeed = async (req, res) => {
 
         return {
           ...blog,
-          finalScore: blog.totalScore + behaviorScore
+          finalScore: blog.totalScore + behaviorScore,
+          myReaction: blog.myReaction || null
         };
       })
       .sort((a, b) => b.finalScore - a.finalScore);
 
-    res.json({
+    return res.json({
       count: rankedBlogs.length,
       blogs: rankedBlogs
     });
+
   } catch (err) {
-    res.status(500).json({ error: "Failed to load personalized feed" });
+    console.error("Feed error:", err);
+    return res.status(500).json({
+      error: "Failed to load personalized feed"
+    });
   }
 };
 
 
-module.exports = { createBlog, updateBlog, deleteBlog, readBlog , readBlogUsingSlug,
-                    myBlog, publishBlog, unpublishBlog, getFeaturedBlogs, featureBlog,
-                  unfeatureBlog, notPersonalisedFeed, trending, blogView, reactionOnBlog
-                , getReactionPerType, commentOnBlog, commentOnComment, getComments, updateComment
-               ,deleteComment,getBlogViews, trackBlogView, getBlogsViewStats, createReport, 
-                listReports, updateReportStatus, getUserInterests, createUserInterests, updateUserInterests,
-                getTags, getCategories, getFeed, searchBlogs,getCategories, getTags };
+module.exports = {
+  createBlog,
+  updateBlog,
+  deleteBlog,
+  readBlog,
+  readBlogUsingSlug,
+  myBlog,
+  publishBlog,
+  unpublishBlog,
+  getFeaturedBlogs,
+  featureBlog,
+  unfeatureBlog,
+  notPersonalisedFeed,
+  trending,
+  blogView,
+  reactionOnBlog,
+  getReactionPerType,
+  commentOnBlog,
+  commentOnComment,
+  getComments,
+  updateComment,
+  deleteComment,
+  getBlogViews,
+  trackBlogView,
+  getBlogsViewStats,
+  createReport,
+  listReports,
+  updateReportStatus,
+  getUserInterests,
+  createUserInterests,
+  updateUserInterests,
+  getTags,
+  getCategories,
+  getFeed,
+  searchBlogs,
+  getCategories,
+  getTags,
+};

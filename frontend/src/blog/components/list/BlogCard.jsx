@@ -32,7 +32,19 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
           {coverImage ? (
             <img src={coverImage} alt={title} className="w-full object-cover" />
           ) : (
-            <video src={videoUrl} controls className="w-full object-cover" />
+            // <video src={videoUrl} controls className="w-full object-cover" />
+            <iframe 
+              width="560" 
+              height="315" 
+              src="https://www.youtube.com/embed/LBCZaNd1rkM" 
+              title="Vedic Guided Meditation" 
+              frameborder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen
+              className="w-full object-cover"
+              >
+            </iframe>
+
           )}
         </figure>
       )}
@@ -86,8 +98,8 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
             className="border-t pt-4 mt-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <CommentForm blogId={_id} />
-            <CommentList blogId={_id} />
+            {/* <CommentForm blogId={_id} />
+            <CommentList blogId={_id} /> */}
           </div>
         )}
       </div>
