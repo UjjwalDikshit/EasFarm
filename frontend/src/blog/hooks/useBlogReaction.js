@@ -13,28 +13,49 @@ export const useBlogReaction = () => {
 
       // snapshot previous state
       const previousBlogs = queryClient.getQueriesData({
-        queryKey: ["blogs"]
+        queryKey: ["blogs"],
       });
 
       // optimistic update
-      previousBlogs.forEach(([queryKey, blogs]) => {
-        if (!Array.isArray(blogs)) return;
+      // previousBlogs.forEach(([queryKey, blogs]) => {
+      //   if (!Array.isArray(blogs)) return;
 
-        queryClient.setQueryData(queryKey, old => // old is old cached data for this query key
-          old.map(blog => {
+      //   queryClient.setQueryData(queryKey, old => // old is old cached data for this query key
+      //     old.map(blog => {
+      //       if (blog._id !== blogId) return blog;
+
+      //       const isSame = blog.myReaction === type;
+
+      //       return {
+      //         ...blog,
+      //         myReaction: isSame ? null : type,
+      //         likesCount: isSame
+      //           ? blog.likesCount - 1
+      //           : blog.likesCount + (blog.myReaction ? 0 : 1)
+      //       };
+      //     })
+      //   );
+      // });
+
+      previousBlogs.forEach(([queryKey, oldData]) => {
+        if (!oldData?.blogs) return;
+
+        queryClient.setQueryData(queryKey, (old) => ({
+          ...old,
+          blogs: old.blogs.map((blog) => {
             if (blog._id !== blogId) return blog;
 
-            const isSame = blog.myReaction === type;
-
+            // const isSame = blog.myReaction === type;
+            const isSame = blog.myReaction == 'like';
             return {
               ...blog,
               myReaction: isSame ? null : type,
               likesCount: isSame
                 ? blog.likesCount - 1
-                : blog.likesCount + (blog.myReaction ? 0 : 1)
+                : blog.likesCount + (blog.myReaction ? 0 : 1),
             };
-          })
-        );
+          }),
+        }));
       });
 
       return { previousBlogs };
@@ -45,6 +66,6 @@ export const useBlogReaction = () => {
       context?.previousBlogs?.forEach(([key, data]) => {
         queryClient.setQueryData(key, data);
       });
-    }
+    },
   });
 };

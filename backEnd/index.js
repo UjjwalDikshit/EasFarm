@@ -7,7 +7,7 @@ const queryChat = require('./src/routes/aiChat');
 const weather = require('./src/routes/weatherData');
 // const startTrendingDecay = require("./src/cron/trendingDecay.cron");
 
-const blog = require('./src/routes/blog.JustToAdressjs');
+const blog = require('./src/routes/blog');
 const dbConnect = require('./src/config/db');
 const cookieParser = require('cookie-parser');
 const payment = require('./src/routes/payment');

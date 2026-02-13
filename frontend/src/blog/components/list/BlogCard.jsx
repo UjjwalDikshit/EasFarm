@@ -18,8 +18,10 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
     myReaction,
   } = blog;
 
-  const isLiked = myReaction === "like";
+  const isLiked = myReaction == "like";
   const navigate = useNavigate();
+  // console.log(blog);
+  // console.log(isLiked);
 
   return (
     <article
@@ -38,9 +40,9 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
               height="315" 
               src="https://www.youtube.com/embed/LBCZaNd1rkM" 
               title="Vedic Guided Meditation" 
-              frameborder="0" 
+              frameBorder="0" 
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-              allowfullscreen
+              allowFullScreen
               className="w-full object-cover"
               >
             </iframe>
@@ -98,8 +100,8 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
             className="border-t pt-4 mt-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* <CommentForm blogId={_id} />
-            <CommentList blogId={_id} /> */}
+            <CommentForm blogId={_id} />
+            <CommentList blogId={_id} />
           </div>
         )}
       </div>

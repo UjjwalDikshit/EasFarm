@@ -51,10 +51,10 @@ blog_router.get("/", notPersonalisedFeed);
 
 // Nested ID Routes
 
-blog_router.post("/:id/reactions", reactionOnBlog);
+blog_router.post("/:blogId/reactions", authMiddleware, reactionOnBlog);
 blog_router.get("/:id/reactions", getReactionPerType);
 
-blog_router.post("/:id/comments", commentOnBlog);
+blog_router.post("/:id/comments", authMiddleware, commentOnBlog);
 blog_router.get("/:id/comments", getComments);
 
 blog_router.post("/:id/view", trackBlogView);
@@ -67,3 +67,5 @@ blog_router.post("/:id/mark_unfeatured", unfeatureBlog);
 
 blog_router.put("/:id", updateBlog);
 blog_router.delete("/:id", deleteBlog);
+
+module.exports = blog_router;

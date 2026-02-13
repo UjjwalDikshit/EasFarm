@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Blog = require("../../models/blogs/blog");
 const UserInterest = require("../../models/blogs/userInterest");
 const BlogView = require("../../models/blogs/blogViews");
@@ -606,7 +606,7 @@ const blogView = async (req, res) => {
 const reactionOnBlog = async (req, res) => {
   try {
     const blogId = req.params.blogId;
-    const userId = req.user.id; // auth required
+    const userId = req.user._id; // auth required
     const { type } = req.body;
 
     if (!["like", "clap", "love", "insightful"].includes(type)) {
@@ -650,6 +650,12 @@ const reactionOnBlog = async (req, res) => {
       userId,
       type,
     });
+
+    // await BlogInteraction.create({
+    //   blogId,
+    //   userId,
+    //   type : "like"
+    // });
 
     await Blog.findByIdAndUpdate(blogId, {
       $inc: { likesCount: 1, trendingScore: 3 },
@@ -695,14 +701,14 @@ const getReactionPerType = async (req, res) => {
 
 const commentOnBlog = async (req, res) => {
   try {
-    const blogId = req.params.blogId;
-    const userId = req.user.id;
+    const blogId = req.params.id;
+    const userId = req.user._id;
     const { content } = req.body;
 
     if (!content || !content.trim()) {
       return res.status(400).json({ message: "Comment cannot be empty" });
     }
-
+    console.log("inside add commment");
     const comment = await Comment.create({
       blogId,
       userId,
@@ -1319,6 +1325,8 @@ const searchBlogs = async (req, res) => {
 const getFeed = async (req, res) => {
   try {
     const userId = req.user._id;
+    const userObjectId = new mongoose.Types.ObjectId(req.user._id);
+
     const limit = Number(req.query.limit) || 20;
 
     /* ---------------- USER INTERESTS ---------------- */
@@ -1334,46 +1342,43 @@ const getFeed = async (req, res) => {
         $group: {
           _id: "$blogId",
           likeScore: {
-            $sum: { $cond: [{ $eq: ["$type", "like"] }, 5, 0] }
+            $sum: { $cond: [{ $eq: ["$type", "like"] }, 5, 0] },
           },
           commentScore: {
-            $sum: { $cond: [{ $eq: ["$type", "comment"] }, 7, 0] }
+            $sum: { $cond: [{ $eq: ["$type", "comment"] }, 7, 0] },
           },
           viewScore: {
-            $sum: { $cond: [{ $eq: ["$type", "view"] }, 1, 0] }
+            $sum: { $cond: [{ $eq: ["$type", "view"] }, 1, 0] },
           },
           readTimeScore: {
             $sum: {
               $cond: [
                 { $eq: ["$type", "read"] },
                 { $divide: ["$duration", 30] },
-                0
-              ]
-            }
-          }
-        }
-      }
+                0,
+              ],
+            },
+          },
+        },
+      },
     ]);
 
     const interactionMap = {};
-    interactions.forEach(i => {
+    interactions.forEach((i) => {
       interactionMap[i._id.toString()] =
-        i.likeScore +
-        i.commentScore +
-        i.viewScore +
-        i.readTimeScore;
+        i.likeScore + i.commentScore + i.viewScore + i.readTimeScore;
     });
 
     /* ---------------- BASE MATCH ---------------- */
     const matchStage = {
       status: "published",
-      isDeleted: false
+      isDeleted: false,
     };
 
     if (interestTags.length || interestCategories.length) {
       matchStage.$or = [
         { tags: { $in: interestTags } },
-        { category: { $in: interestCategories } }
+        { category: { $in: interestCategories } },
       ];
     }
 
@@ -1388,19 +1393,15 @@ const getFeed = async (req, res) => {
             $add: [
               {
                 $size: {
-                  $setIntersection: ["$tags", interestTags]
-                }
+                  $setIntersection: ["$tags", interestTags],
+                },
               },
               {
-                $cond: [
-                  { $in: ["$category", interestCategories] },
-                  3,
-                  0
-                ]
-              }
-            ]
-          }
-        }
+                $cond: [{ $in: ["$category", interestCategories] }, 3, 0],
+              },
+            ],
+          },
+        },
       },
 
       /* ---------------- FRESHNESS SCORE ---------------- */
@@ -1414,15 +1415,15 @@ const getFeed = async (req, res) => {
                   {
                     $divide: [
                       { $subtract: [new Date(), "$createdAt"] },
-                      1000 * 60 * 60 * 24
-                    ]
+                      1000 * 60 * 60 * 24,
+                    ],
                   },
-                  1
-                ]
-              }
-            ]
-          }
-        }
+                  1,
+                ],
+              },
+            ],
+          },
+        },
       },
 
       /* ---------------- POPULARITY SCORE ---------------- */
@@ -1432,29 +1433,26 @@ const getFeed = async (req, res) => {
             $add: [
               { $multiply: [{ $ifNull: ["$viewsCount", 0] }, 0.3] },
               { $multiply: [{ $ifNull: ["$likesCount", 0] }, 2] },
-              { $multiply: [{ $ifNull: ["$commentsCount", 0] }, 3] }
-            ]
-          }
-        }
+              { $multiply: [{ $ifNull: ["$commentsCount", 0] }, 3] },
+            ],
+          },
+        },
       },
 
       /* ---------------- TOTAL SYSTEM SCORE ---------------- */
       {
         $addFields: {
           totalScore: {
-            $add: [
-              "$interestScore",
-              "$freshnessScore",
-              "$popularityScore"
-            ]
-          }
-        }
+            $add: ["$interestScore", "$freshnessScore", "$popularityScore"],
+          },
+        },
       },
 
       /* ---------------- USER REACTION LOOKUP ---------------- */
+
       {
         $lookup: {
-          from: "bloginteractions",
+          from: "reactions", //  correct collection
           let: { blogId: "$_id" },
           pipeline: [
             {
@@ -1462,62 +1460,59 @@ const getFeed = async (req, res) => {
                 $expr: {
                   $and: [
                     { $eq: ["$blogId", "$$blogId"] },
-                    { $eq: ["$userId", userId] },
-                    { $in: ["$type", ["like", "clap", "love"]] }
-                  ]
-                }
-              }
+                    { $eq: ["$userId", userObjectId] },
+                  ],
+                },
+              },
             },
-            { $limit: 1 }
+            { $limit: 1 },
           ],
-          as: "myReactionData"
-        }
+          as: "myReactionData",
+        },
       },
+
       {
         $addFields: {
           myReaction: {
-            $arrayElemAt: ["$myReactionData.type", 0]
-          }
-        }
+            $arrayElemAt: ["$myReactionData.type", 0],
+          },
+        },
       },
       {
         $project: {
-          myReactionData: 0
-        }
+          myReactionData: 0,
+        },
       },
 
       /* ---------------- SORT + LIMIT ---------------- */
       { $sort: { totalScore: -1 } },
-      { $limit: limit }
+      { $limit: limit },
     ]);
 
     /* ---------------- APPLY BEHAVIOR BOOST ---------------- */
     const rankedBlogs = blogs
-      .map(blog => {
-        const behaviorScore =
-          interactionMap[blog._id.toString()] || 0;
+      .map((blog) => {
+        const behaviorScore = interactionMap[blog._id.toString()] || 0;
 
         return {
           ...blog,
           finalScore: blog.totalScore + behaviorScore,
-          myReaction: blog.myReaction || null
+          myReaction: blog.myReaction || null,
         };
       })
       .sort((a, b) => b.finalScore - a.finalScore);
 
     return res.json({
       count: rankedBlogs.length,
-      blogs: rankedBlogs
+      blogs: rankedBlogs,
     });
-
   } catch (err) {
     console.error("Feed error:", err);
     return res.status(500).json({
-      error: "Failed to load personalized feed"
+      error: "Failed to load personalized feed",
     });
   }
 };
-
 
 module.exports = {
   createBlog,

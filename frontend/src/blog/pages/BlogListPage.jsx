@@ -65,7 +65,7 @@ const BlogListPage = () => {
             <div key={blog._id}>
               <BlogCard
                 blog={blog}
-                onLike={handleReaction}
+                onReaction={handleReaction}
                 onCommentClick={handleCommentClick}
                 isCommentOpen={openCommentBlogId === blog._id}
               />
