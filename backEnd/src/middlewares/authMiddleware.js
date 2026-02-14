@@ -4,8 +4,6 @@ const redisClient = require("../config/redis");
 const authMiddleware = async (req, res, next) => {
   const token = req.cookies.token;
 
-  console.log(token);
-  
   if (!token) {
     return res.status(401).json({ LoggedIn:false, message: "Not authenticated" });
   }

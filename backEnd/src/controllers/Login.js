@@ -36,7 +36,7 @@ const Login = async (req, res) => {
         iat: Math.floor(Date.now() / 1000),
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: `1d` }
     );
 
     res.cookie("token", token, {

@@ -1,19 +1,30 @@
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as commentAPI from "../services/comment.api";
 
+/* ===========================
+   GET COMMENTS (INFINITE)
+=========================== */
+
 export const useComments = (blogId) => {
   return useInfiniteQuery({
     queryKey: ["comments", blogId],
     queryFn: ({ pageParam = 1 }) =>
       commentAPI.getComments(blogId, pageParam, 5),
-    getNextPageParam: (lastPage, allPages) => {
-      const hasMore = lastPage.data.meta.page < lastPage.data.meta.totalPages;
-      return hasMore ? lastPage.data.meta.page + 1 : undefined;
+
+    getNextPageParam: (lastPage) => {
+      const { page, limit, total } = lastPage.data;
+      const totalPages = Math.ceil(total / limit);
+      return page < totalPages ? page + 1 : undefined;
     },
+
     enabled: !!blogId
   });
 };
 
+
+/* ===========================
+   REPLY TO COMMENT
+=========================== */
 
 export const useReplyComment = (blogId) => {
   const queryClient = useQueryClient();
@@ -22,7 +33,6 @@ export const useReplyComment = (blogId) => {
     mutationFn: ({ commentId, content }) =>
       commentAPI.replyComment(commentId, content),
 
-    // 1 OPTIMISTIC UPDATE
     onMutate: async ({ commentId, content }) => {
       await queryClient.cancelQueries({ queryKey: ["comments", blogId] });
 
@@ -37,7 +47,7 @@ export const useReplyComment = (blogId) => {
             ...page,
             data: {
               ...page.data,
-              data: page.data.data.map(comment => {
+              comments: page.data.comments.map(comment => {
                 if (comment._id !== commentId) return comment;
 
                 return {
@@ -60,24 +70,20 @@ export const useReplyComment = (blogId) => {
       return { previous };
     },
 
-    // 2 ROLLBACK IF ERROR
-    onError: (err, variables, context) => {
-      queryClient.setQueryData(
-        ["comments", blogId],
-        context.previous
-      );
+    onError: (_, __, context) => {
+      queryClient.setQueryData(["comments", blogId], context.previous);
     },
 
-    // 3 REFRESH AFTER SUCCESS
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["comments", blogId]
-      });
+      queryClient.invalidateQueries({ queryKey: ["comments", blogId] });
     }
   });
 };
 
 
+/* ===========================
+   ADD NEW COMMENT
+=========================== */
 
 export const useAddComment = (blogId) => {
   const queryClient = useQueryClient();
@@ -86,8 +92,8 @@ export const useAddComment = (blogId) => {
     mutationFn: (content) =>
       commentAPI.addComment(blogId, content),
 
-    onMutate: async (newComment) => {
-      await queryClient.cancelQueries(["comments", blogId]);
+    onMutate: async (content) => {
+      await queryClient.cancelQueries({ queryKey: ["comments", blogId] });
 
       const previous = queryClient.getQueryData(["comments", blogId]);
 
@@ -103,13 +109,14 @@ export const useAddComment = (blogId) => {
               ...firstPage,
               data: {
                 ...firstPage.data,
-                data: [
+                comments: [
                   {
                     _id: Date.now(),
-                    content: newComment,
+                    content,
+                    replies: [],
                     isPending: true
                   },
-                  ...firstPage.data.data
+                  ...firstPage.data.comments
                 ]
               }
             },
@@ -122,14 +129,11 @@ export const useAddComment = (blogId) => {
     },
 
     onError: (_, __, context) => {
-      queryClient.setQueryData(
-        ["comments", blogId],
-        context.previous
-      );
+      queryClient.setQueryData(["comments", blogId], context.previous);
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries(["comments", blogId]);
+      queryClient.invalidateQueries({ queryKey: ["comments", blogId] });
     }
   });
 };

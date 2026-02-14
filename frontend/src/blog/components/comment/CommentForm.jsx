@@ -1,8 +1,5 @@
 import { useState } from "react";
-import {
-  useAddComment,
-  useReplyComment,
-} from "../../hooks/useComment";
+import { useAddComment, useReplyComment } from "../../hooks/useComment";
 
 const CommentForm = ({
   blogId,
@@ -34,14 +31,10 @@ const CommentForm = ({
       <input
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder={
-          isReply ? "Write a reply..." : "Write a comment..."
-        }
+        placeholder={isReply ? "Write a reply..." : "Write a comment..."}
         className="input input-bordered w-full input-sm"
       />
-      <button className="btn btn-primary btn-sm">
-        Post
-      </button>
+      <button className="btn btn-primary btn-sm">Post</button>
     </form>
   );
 };

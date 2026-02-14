@@ -7,6 +7,7 @@ const Report = require("../../models/blogs/report");
 const Reaction = require("../../models/blogs/reaction");
 const BlogInteraction = require("../../models/blogs/BlogInteration");
 const Comment = require("../../models/blogs/comment");
+// const User = require('../../models/farmerSchema');
 
 const blog = require("../../models/blogs/blog");
 
@@ -708,7 +709,6 @@ const commentOnBlog = async (req, res) => {
     if (!content || !content.trim()) {
       return res.status(400).json({ message: "Comment cannot be empty" });
     }
-    console.log("inside add commment");
     const comment = await Comment.create({
       blogId,
       userId,
@@ -734,7 +734,7 @@ const commentOnBlog = async (req, res) => {
 const commentOnComment = async (req, res) => {
   try {
     const { commentId } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
     const { content } = req.body;
 
     if (!content || !content.trim()) {
@@ -772,6 +772,64 @@ const commentOnComment = async (req, res) => {
   }
 };
 
+// const getComments = async (req, res) => {
+//   try {
+//     const blogId = req.params.id;
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = Math.min(parseInt(req.query.limit) || 10, 20);
+//     const skip = (page - 1) * limit;
+
+//     // 1 Get parent comments (paginated)
+//     const parentComments = await Comment.find({
+//       blogId,
+//       parentCommentId: null,
+//       isDeleted: false,
+//     })
+//       .sort({ createdAt: -1 })
+//       .skip(skip)
+//       .limit(limit)
+//       .populate("userId", "name avatar")
+//       .lean();
+
+//     const parentIds = parentComments.map(c => c._id);
+
+//     // 2 Get replies for those parent comments
+//     const replies = await Comment.find({
+//       parentCommentId: { $in: parentIds },
+//       isDeleted: false,
+//     })
+//       .sort({ createdAt: -1 })
+//       .populate("userId", "name avatar")
+//       .lean();
+
+//     // 3 Attach replies to their parent
+//     const comments = parentComments.map(parent => ({
+//       ...parent,
+//       replies: replies.filter(
+//         reply => reply.parentCommentId.toString() === parent._id.toString()
+//       ),
+//     }));
+
+//     // 4 Total count (only parent comments)
+//     const total = await Comment.countDocuments({
+//       blogId,
+//       parentCommentId: null,
+//       isDeleted: false,
+//     });
+
+//     return res.status(200).json({
+//       page,
+//       limit,
+//       total,
+//       comments,
+//     });
+
+//   } catch (error) {
+//     console.error("Get comments error:", error);
+//     return res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
 const getComments = async (req, res) => {
   try {
     const blogId = req.params.id;
@@ -779,7 +837,8 @@ const getComments = async (req, res) => {
     const limit = Math.min(parseInt(req.query.limit) || 10, 20);
     const skip = (page - 1) * limit;
 
-    const comments = await Comment.find({
+    // 1 Fetch paginated parent comments
+    const parentComments = await Comment.find({
       blogId,
       parentCommentId: null,
       isDeleted: false,
@@ -787,8 +846,38 @@ const getComments = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("userId", "name avatar");
+      .populate("userId", "name avatar")
+      .lean(); // VERY IMPORTANT (better performance)
 
+    const parentIds = parentComments.map(c => c._id);
+
+    // 2 Fetch all replies for those parents
+    const replies = await Comment.find({
+      parentCommentId: { $in: parentIds },
+      isDeleted: false,
+    })
+      .sort({ createdAt: -1 })
+      .populate("userId", "name avatar")
+      .lean();
+
+    // 3 Group replies efficiently (O(n))
+    const repliesMap = {};
+
+    for (const reply of replies) {
+      const parentId = reply.parentCommentId.toString();
+      if (!repliesMap[parentId]) {
+        repliesMap[parentId] = [];
+      }
+      repliesMap[parentId].push(reply);
+    }
+
+    // 4 Attach replies without filtering (O(n))
+    const comments = parentComments.map(parent => ({
+      ...parent,
+      replies: repliesMap[parent._id.toString()] || [],
+    }));
+
+    // 5 Count parent comments only
     const total = await Comment.countDocuments({
       blogId,
       parentCommentId: null,
@@ -801,11 +890,13 @@ const getComments = async (req, res) => {
       total,
       comments,
     });
+
   } catch (error) {
     console.error("Get comments error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 const updateComment = async (req, res) => {
   try {

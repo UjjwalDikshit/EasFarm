@@ -11,7 +11,7 @@ const commentSchema = new mongoose.Schema(
 
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "farmer",
       required: true
     },
 
@@ -40,7 +40,8 @@ const commentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-commentSchema.index({ blogId: 1, createdAt: -1 });
-commentSchema.index({ parentCommentId: 1, createdAt: 1 });
+commentSchema.index({ blogId: 1, parentCommentId: 1, createdAt: -1 });
+commentSchema.index({ parentCommentId: 1, createdAt: -1 });
+
 
 module.exports = mongoose.model("Comment", commentSchema);

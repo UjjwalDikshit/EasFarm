@@ -55,6 +55,8 @@ blog_router.post("/:blogId/reactions", authMiddleware, reactionOnBlog);
 blog_router.get("/:id/reactions", getReactionPerType);
 
 blog_router.post("/:id/comments", authMiddleware, commentOnBlog);
+blog_router.post("/comments/:commentId/reply", authMiddleware, commentOnComment);
+
 blog_router.get("/:id/comments", getComments);
 
 blog_router.post("/:id/view", trackBlogView);

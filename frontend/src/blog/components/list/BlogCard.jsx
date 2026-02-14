@@ -20,8 +20,7 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
 
   const isLiked = myReaction == "like";
   const navigate = useNavigate();
-  // console.log(blog);
-  // console.log(isLiked);
+  
 
   return (
     <article

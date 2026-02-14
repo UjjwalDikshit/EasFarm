@@ -1,5 +1,5 @@
 import { useComments } from "../../hooks/useComment";
-import CommentItem from './CommentItem'
+import CommentItem from "./CommentItem";
 import { useEffect, useRef } from "react";
 
 const CommentList = ({ blogId }) => {
@@ -23,9 +23,9 @@ const CommentList = ({ blogId }) => {
   return (
     <div className="mt-4 space-y-4">
       {data?.pages.map((page) =>
-        page.data.data.map((comment) => (
-          <CommentItem key={comment._id} comment={comment} />
-        ))
+        page.data.comments.map((comment) => (
+          <CommentItem key={comment._id} comment={comment} blogId={blogId} />
+        )),
       )}
 
       <div ref={observerRef} />
