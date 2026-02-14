@@ -18,13 +18,17 @@ const CommentItem = ({ comment, blogId , nowNoReply = "true" }) => {
         <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
           <span>{createdAt && new Date(createdAt).toLocaleString()}</span>
 
-          <button
-            className="flex items-center gap-1 hover:text-primary"
-            onClick={() => setShowReplyForm((prev) => !prev)}
-          >
-            <MessageCircle size={14} />
-            Reply
-          </button>
+          {nowNoReply !== "false" && (
+            <button
+              className="flex items-center gap-1 hover:text-primary"
+              onClick={() => setShowReplyForm((prev) => !prev)}
+            >
+              <MessageCircle size={14} />
+              Reply
+            </button>
+          )}
+
+           
 
           {replies.length > 0 && (
             <button
