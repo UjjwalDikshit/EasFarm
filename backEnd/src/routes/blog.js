@@ -67,6 +67,7 @@ blog_router.post("/:id/unpublish", unpublishBlog);
 blog_router.post("/:id/mark_featured", featureBlog);
 blog_router.post("/:id/mark_unfeatured", unfeatureBlog);
 
+blog_router.get('/:id', authMiddleware, readBlog);
 blog_router.put("/:id", updateBlog);
 blog_router.delete("/:id", deleteBlog);
 

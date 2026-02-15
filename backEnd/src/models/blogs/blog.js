@@ -4,7 +4,7 @@ const blogSchema = new mongoose.Schema(
   {
     authorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "farmer",
       required: true,
     },
 

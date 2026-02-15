@@ -7,8 +7,9 @@ import WeatherButton from "./components/WeatherButton";
 import Signup from "./pages/Signup";
 import Login from "./components/login";
 import Logout from "./components/Logout";
-import Blog from "../src/blog/pages/BlogListPage";
+import BlogListPage from "../src/blog/pages/BlogListPage";
 import { Routes, Route } from "react-router";
+import BlogDetailPage from "./blog/pages/BlogDetailPage";
 
 function App() {
   return (
@@ -24,11 +25,9 @@ function App() {
         <Route path="/products/husbandry" element={<WorkInProgress />} />
         <Route path="/schemes" element={<WorkInProgress />} />
         <Route path="/signup" element={<Signup />} />
-
         {/* BLOG ROUTES */}
-        <Route path="/blog" element={<Blog />}>
-          {/* <Route path=":blogId" element={<BlogDetailPage />} /> */}
-        </Route>
+        <Route path="/blog" element={<BlogListPage />} />
+        <Route path="/blog/:blogId" element={<BlogDetailPage />} />
       </Routes>
     </>
   );

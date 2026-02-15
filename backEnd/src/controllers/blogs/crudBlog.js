@@ -184,11 +184,15 @@ const deleteBlog = async (req, res) => {
 const readBlog = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user?._id;
 
     const blog = await Blog.findOne({
       _id: id,
       isDeleted: false,
-    });
+      status: "published",
+    })
+      .populate("authorId", "fullName emailId")
+      .lean();
 
     if (!blog) {
       return res.status(404).json({
@@ -197,20 +201,69 @@ const readBlog = async (req, res) => {
       });
     }
 
+    let myReaction = null;
+
+    if (userId) {
+      const baseFilter = { blogId: id, userId };
+
+      // ✅ 1️⃣ Get user reaction
+      const reactionDoc = await Reaction.findOne(baseFilter)
+        .select("type")
+        .lean();
+
+      myReaction = reactionDoc?.type || null;
+
+      // ✅ 2️⃣ Atomic insert for VIEW type only
+      const viewResult = await BlogInteraction.updateOne(
+        { ...baseFilter, type: "view" },
+        {
+          $setOnInsert: {
+            blogId: id,
+            userId,
+            type: "view",
+            duration: 0,
+          },
+        },
+        { upsert: true }
+      );
+
+      // ✅ 3️⃣ Increment only if first time view
+      if (viewResult.upsertedCount === 1) {
+        await Blog.updateOne(
+          { _id: id },
+          {
+            $inc: {
+              viewsCount: 1,
+              trendingScore: 1,
+            },
+          }
+        );
+      }
+    } else {
+      // Guest view (optional logic)
+      await Blog.updateOne(
+        { _id: id },
+        { $inc: { viewsCount: 1 } }
+      );
+    }
+
     return res.status(200).json({
       success: true,
       message: "Blog fetched successfully",
-      data: blog,
+      data: {
+        ...blog,
+        myReaction,
+      },
     });
   } catch (error) {
     console.error("Read blog error:", error);
-
     return res.status(500).json({
       success: false,
       message: "Failed to fetch blog",
     });
   }
 };
+
 
 const readBlogUsingSlug = async (req, res) => {
   try {
@@ -849,7 +902,7 @@ const getComments = async (req, res) => {
       .populate("userId", "name avatar")
       .lean(); // VERY IMPORTANT (better performance)
 
-    const parentIds = parentComments.map(c => c._id);
+    const parentIds = parentComments.map((c) => c._id);
 
     // 2 Fetch all replies for those parents
     const replies = await Comment.find({
@@ -872,7 +925,7 @@ const getComments = async (req, res) => {
     }
 
     // 4 Attach replies without filtering (O(n))
-    const comments = parentComments.map(parent => ({
+    const comments = parentComments.map((parent) => ({
       ...parent,
       replies: repliesMap[parent._id.toString()] || [],
     }));
@@ -890,13 +943,11 @@ const getComments = async (req, res) => {
       total,
       comments,
     });
-
   } catch (error) {
     console.error("Get comments error:", error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
-
 
 const updateComment = async (req, res) => {
   try {

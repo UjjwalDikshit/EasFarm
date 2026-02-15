@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { reactOnBlog } from "../services/reaction.api";
+import { toggleLike } from "../services/reaction.api";
 
 export const useBlogReaction = () => {
   const queryClient = useQueryClient();
@@ -66,6 +67,41 @@ export const useBlogReaction = () => {
       context?.previousBlogs?.forEach(([key, data]) => {
         queryClient.setQueryData(key, data);
       });
+    },
+  });
+};
+
+// for single blogRead
+
+export const useBlogReactionforBlogById = (blogId) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => toggleLike(blogId),
+
+    onMutate: async () => {
+      await queryClient.cancelQueries(["blogsById", blogId]);
+
+      const previous = queryClient.getQueryData(["blogsById", blogId]);
+
+      queryClient.setQueryData(["blogsById", blogId], old => ({
+        ...old,
+        isLiked: !old.isLiked,
+        likesCount: old.isLiked
+          ? old.likesCount - 1
+          : old.likesCount + 1,
+      }));
+
+      return { previous };
+    },
+
+    onError: (_, __, context) => {
+      queryClient.setQueryData(["blogsById", blogId], context.previous);
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries(["blogsById", blogId]);
+      queryClient.invalidateQueries(["blogsById"]);
     },
   });
 };

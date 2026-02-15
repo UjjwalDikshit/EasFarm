@@ -20,7 +20,6 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
 
   const isLiked = myReaction == "like";
   const navigate = useNavigate();
-  
 
   return (
     <article
@@ -34,13 +33,13 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
             <img src={coverImage} alt={title} className="w-full object-cover" />
           ) : (
             // <video src={videoUrl} controls className="w-full object-cover" />
-            <iframe 
-              width="560" 
-              height="315" 
-              src="https://www.youtube.com/embed/LBCZaNd1rkM" 
-              title="Vedic Guided Meditation" 
-              frameBorder="0" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+            <iframe
+              width="560"
+              height="315"
+              src="https://www.youtube.com/embed/LBCZaNd1rkM"
+              title="Vedic Guided Meditation"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="w-full object-cover"
               >
@@ -52,7 +51,7 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
 
       <div className="card-body">
         {/* Title */}
-        <Link to={`/blogs/${slug}`} onClick={(e) => e.stopPropagation()}>
+         <Link to={`/blog/${_id}`} onClick={(e) => e.stopPropagation()}>  {/*can redirect to slug */}
           <h2 className="card-title line-clamp-2 hover:underline">{title}</h2>
         </Link>
 
