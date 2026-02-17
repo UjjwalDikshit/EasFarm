@@ -10,6 +10,7 @@ import Logout from "./components/Logout";
 import BlogListPage from "../src/blog/pages/BlogListPage";
 import { Routes, Route } from "react-router";
 import BlogDetailPage from "./blog/pages/BlogDetailPage";
+import UserDashboard from "./pages/UserDashboard";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         {/* BLOG ROUTES */}
         <Route path="/blog" element={<BlogListPage />} />
         <Route path="/blog/:blogId" element={<BlogDetailPage />} />
+        <Route path='/user/dashboard/' element={<UserDashboard/>}/>
       </Routes>
     </>
   );

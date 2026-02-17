@@ -1,31 +1,59 @@
 import { useParams } from "react-router-dom";
-import { useBlogById, useBlogBySlug } from "../hooks/useBlogs";
-import { useBlogReactionforBlogById } from "../hooks/useBlogReaction";
-import { useCommentsForBlogById } from "../hooks/useComment";
+import { useState } from "react";
 import DOMPurify from "dompurify";
 
-const BlogDetailPage = () => {
-  //   const { slug } = useParams();
+import { useBlogById } from "../hooks/useBlogs";
+import { useToggleBlogLike } from "../hooks/useBlogReaction";
+import {
+  useComments,
+  useAddComment,
+  useReplyComment,
+} from "../hooks/useComment";
+
+import CommentItemUniqueBlog from "../components/comment/CommentItemUniqueBlog";
+
+const BlogDetailPage = ({ currentUser }) => {
   const { blogId } = useParams();
+
+  /* ================= BLOG ================= */
 
   const { data: blog, isLoading, isError } = useBlogById(blogId);
 
-  const likeMutation = useBlogReactionforBlogById(blog?._id);
-  const commentMutation = useCommentsForBlogById(blog?._id);
+  const likeMutation = useToggleBlogLike(blogId);
 
-    if (isLoading)
+  /* ================= COMMENTS ================= */
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useComments(blogId);
+
+  const addCommentMutation = useAddComment(blogId, currentUser);
+
+  const [showComments, setShowComments] = useState(false);
+  const [commentText, setCommentText] = useState("");
+
+  if (isLoading)
     return (
-        <div className="flex flex-col items-center justify-center py-20">
+      <div className="flex flex-col items-center justify-center py-20">
         <div className="w-10 h-10 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
         <p className="mt-4 text-gray-600 text-sm font-medium">
-            Loading blog...
+          Loading blog...
         </p>
-        </div>
+      </div>
     );
 
-  
-  console.log(blog);
   if (isError || !blog) return <p>Blog not found</p>;
+
+  // const comments = data?.pages.flatMap((page) => page.data.comments) || [];
+
+  const handleAddComment = (e) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+
+    addCommentMutation.mutate(commentText);
+    setCommentText("");
+  };
+
+  /* ================= RENDER ================= */
 
   return (
     <div className="max-w-4xl mx-auto py-10 space-y-6">
@@ -33,18 +61,17 @@ const BlogDetailPage = () => {
       <p className="text-sm text-blue-500 uppercase bg">{blog.category}</p>
 
       {/* TITLE */}
-    <h1 className="text-4xl italic font-serif text-white-900 border-l-4 border-indigo-500 pl-4">
+      <h1 className="text-4xl italic font-serif text-white-900 border-l-4 border-indigo-500 pl-4">
         {blog.title}
-    </h1>
-
+      </h1>
 
       {/* AUTHOR + DATE */}
       <div className="flex items-center gap-3 text-sm text-gray-500">
         <span>By {blog.authorId?.fullName}</span>{" "}
         {/* later can add image link + name */}
         <span>
-          {new Date(blog.createdAt)
-            .toLocaleString("en-GB", {
+          {
+            new Date(blog.createdAt).toLocaleString("en-GB", {
               day: "numeric",
               month: "numeric",
               year: "numeric",
@@ -53,7 +80,7 @@ const BlogDetailPage = () => {
               hour12: true,
             })
             // .replace(",", "")
-            }
+          }
         </span>
         {/* change updated -> published at */}
       </div>
@@ -74,18 +101,12 @@ const BlogDetailPage = () => {
           height="315"
           src="https://www.youtube.com/embed/LBCZaNd1rkM"
           title="Vedic Guided Meditation"
-          FrameBorder="0"
+          frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
           className="w-full object-cover"
         ></iframe>
       )}
-
-      {/* CONTENT
-      <div
-        className="prose max-w-none"
-        dangerouslySetInnerHTML={{ __html: blog.content }}
-      /> */}
 
       {/* set for presenting content in formated form, store html at backend? there are better later i will try definitly, like editorJs , reactMarkDown*/}
       <div
@@ -108,42 +129,77 @@ const BlogDetailPage = () => {
       </div>
 
       {/* META */}
-      <div className="flex gap-6 text-sm text-gray-600">
-        <span>Views {blog.viewsCount}</span>
-        <button
-          onClick={() => likeMutation.mutate()}
-          className="flex items-center gap-1"
-        >
-          Reactions: {blog.likesCount}
-        </button>
-        <span>Responses: {blog.commentsCount}</span>
-      </div>
-
-      {/* COMMENTS */}
-      <div className="space-y-4">
-        {blog.comments?.map((comment) => (
-          <div key={comment._id} className="border-b pb-2">
-            <p className="font-medium">{comment.user?.name}</p>
-            <p>{comment.text}</p>
+      <div className="flex items-center justify-between py-4 border-y">
+          {/* LEFT SIDE - COUNTS */}
+          <div className="flex items-center gap-6 text-sm text-black-600">
+            <span>Views : {blog.viewsCount}</span>
+            <span>Reactions : {blog.likesCount}</span>
+            <span>Responses : {blog.commentsCount}</span>
           </div>
-        ))}
-      </div>
 
-      {/* ADD COMMENT */}
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          const text = e.target.comment.value;
-          commentMutation.mutate(text);
-          e.target.reset();
-        }}
-      >
-        <input
-          name="comment"
-          placeholder="Write a comment..."
-          className="border p-3 w-full rounded-lg"
-        />
-      </form>
+          {/* RIGHT SIDE - ACTIONS */}
+          <div className="flex items-center gap-3">
+            {/* LIKE BUTTON */}
+            <button
+              onClick={() => likeMutation.mutate()}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 active:scale-95 shadow-sm
+                  ${
+                    blog.myReaction
+                      ? "bg-red-50 text-red-600 shadow-red-100"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`
+                }
+            >
+              <span className="text-lg">❤️</span>
+              <span>{blog.myReaction ? "Liked" : "Like"}</span>
+            </button>
+
+            {/* COMMENT BUTTON */}
+            <button
+              onClick={() => setShowComments((prev) => !prev)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 active:scale-95 shadow-sm"
+            >
+              <span className="text-lg">💬</span>
+              <span>Comment</span>
+            </button>
+          </div>
+      </div> 
+
+      {showComments && (
+        <div className="mt-6 space-y-6">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const text = e.target.comment.value;
+              addCommentMutation.mutate(text);
+              e.target.reset();
+            }}
+            className="flex gap-2"
+          >
+            <input
+              name="comment"
+              placeholder="Write a comment..."
+              className="flex-1 border rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+            />
+            <button className="px-4 py-2 bg-black text-white rounded-full">
+              Post
+            </button>
+          </form>
+
+          {data?.pages.map((page) =>
+            page.data.comments.map((comment) => (
+              <CommentItemUniqueBlog
+                key={comment._id}
+                comment={comment}
+                blogId={blogId}
+                currentUser={currentUser}
+              />
+            ))
+          )}
+
+        </div>
+      )}
+      
     </div>
   );
 };

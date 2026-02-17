@@ -91,7 +91,7 @@ const Header = () => {
                   <span className="text-sm">ujjwaldikshit1@.com</span>
                 </div>
               </li>
-              <li><a>Dashboard</a></li>
+              <li onClick={()=>{navigate('/user/dashboard')}}><a>Dashboard</a></li>
               <li><a>Profile</a></li>
               <li><a>Settings</a></li>
               <li>

@@ -111,7 +111,7 @@ const updateBlog = async (req, res) => {
       updateData.content = content;
     }
 
-    // 3.media update
+    // 3.media update -> dekete previous file using link and deleteFile file inside cloudinary.service.delete.service.js
     if (coverImage) updateData.coverImage = coverImage;
     if (videoUrl) updateData.videoUrl = videoUrl;
 
@@ -660,7 +660,7 @@ const blogView = async (req, res) => {
 const reactionOnBlog = async (req, res) => {
   try {
     const blogId = req.params.blogId;
-    const userId = req.user._id; // auth required
+    const userId = req.user._id; 
     const { type } = req.body;
 
     if (!["like", "clap", "love", "insightful"].includes(type)) {
@@ -677,6 +677,9 @@ const reactionOnBlog = async (req, res) => {
       await Blog.findByIdAndUpdate(blogId, {
         $inc: { likesCount: -1, trendingScore: -3 },
       });
+
+      // if reaction is toggling then also remove BlogInteraction
+      await BlogInteraction.deleteOne({userId,blogId,type:"like"});
 
       return res.status(200).json({
         reacted: false,
@@ -705,11 +708,11 @@ const reactionOnBlog = async (req, res) => {
       type,
     });
 
-    // await BlogInteraction.create({
-    //   blogId,
-    //   userId,
-    //   type : "like"
-    // });
+    await BlogInteraction.create({
+      blogId,
+      userId,
+      type : "like"
+    });
 
     await Blog.findByIdAndUpdate(blogId, {
       $inc: { likesCount: 1, trendingScore: 3 },

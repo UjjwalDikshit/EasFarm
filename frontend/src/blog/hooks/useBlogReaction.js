@@ -18,25 +18,6 @@ export const useBlogReaction = () => {
       });
 
       // optimistic update
-      // previousBlogs.forEach(([queryKey, blogs]) => {
-      //   if (!Array.isArray(blogs)) return;
-
-      //   queryClient.setQueryData(queryKey, old => // old is old cached data for this query key
-      //     old.map(blog => {
-      //       if (blog._id !== blogId) return blog;
-
-      //       const isSame = blog.myReaction === type;
-
-      //       return {
-      //         ...blog,
-      //         myReaction: isSame ? null : type,
-      //         likesCount: isSame
-      //           ? blog.likesCount - 1
-      //           : blog.likesCount + (blog.myReaction ? 0 : 1)
-      //       };
-      //     })
-      //   );
-      // });
 
       previousBlogs.forEach(([queryKey, oldData]) => {
         if (!oldData?.blogs) return;
@@ -73,35 +54,50 @@ export const useBlogReaction = () => {
 
 // for single blogRead
 
-export const useBlogReactionforBlogById = (blogId) => {
+
+export const useToggleBlogLike = (blogId) => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: () => toggleLike(blogId),
 
+    /* 🔥 Optimistic Update */
     onMutate: async () => {
-      await queryClient.cancelQueries(["blogsById", blogId]);
+      await queryClient.cancelQueries(["blog", blogId]);
 
-      const previous = queryClient.getQueryData(["blogsById", blogId]);
+      const previous = queryClient.getQueryData(["blog", blogId]);
 
-      queryClient.setQueryData(["blogsById", blogId], old => ({
-        ...old,
-        isLiked: !old.isLiked,
-        likesCount: old.isLiked
-          ? old.likesCount - 1
-          : old.likesCount + 1,
-      }));
+      queryClient.setQueryData(["blog", blogId], (old) => {
+        if (!old) return old;
+
+        const alreadyLiked = old.myReaction;
+
+        return {
+          ...old,
+          myReaction: !alreadyLiked,
+          likesCount: alreadyLiked
+            ? old.likesCount - 1
+            : old.likesCount + 1,
+        };
+      });
 
       return { previous };
     },
 
+    /* ❌ If backend fails, rollback */
     onError: (_, __, context) => {
-      queryClient.setQueryData(["blogsById", blogId], context.previous);
+      if (context?.previous) {
+        queryClient.setQueryData(
+          ["blog", blogId],
+          context.previous
+        );
+      }
     },
 
+    /* 🔄 Always revalidate */
     onSettled: () => {
-      queryClient.invalidateQueries(["blogsById", blogId]);
-      queryClient.invalidateQueries(["blogsById"]);
+      queryClient.invalidateQueries(["blog", blogId]);
+      queryClient.invalidateQueries(["blogs"]);
     },
   });
 };

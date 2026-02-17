@@ -9,6 +9,7 @@ const weather = require('./src/routes/weatherData');
 
 const blog = require('./src/routes/blog');
 const dbConnect = require('./src/config/db');
+const cloudinary = require('./src/routes/fileUploadBlogs');
 const cookieParser = require('cookie-parser');
 const payment = require('./src/routes/payment');
 const redisClient = require("./src/config/redis");
@@ -36,6 +37,7 @@ app.use('/api',weather);
 app.use('/payment',payment); // write here
 app.use('/query',queryChat);
 app.use('/blog',blog);
+app.use('/cloudinary',cloudinary);
 
 
 
