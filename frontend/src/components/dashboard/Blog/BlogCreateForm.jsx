@@ -1,8 +1,13 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useCreateBlog } from "../hooks/blog.mutations";
+import { uploadToCloudinary } from "../services/uploadToCloudinary";
+import toast from "react-hot-toast";
 
 export default function BlogCreateForm() {
   const [mediaType, setMediaType] = useState("image");
+  const [isUploading, setIsUploading] = useState(false);
+
   const [tags, setTags] = useState([]);
 
   const {
@@ -17,7 +22,7 @@ export default function BlogCreateForm() {
     image: "image/*",
     video: "video/*",
     pdf: "application/pdf",
-    };
+  };
 
   const addTag = () => {
     const value = getValues("currentTag");
@@ -34,23 +39,66 @@ export default function BlogCreateForm() {
     setTags(tags.filter((tag) => tag !== tagToRemove));
   };
 
-  const onSubmit = (data) => {
-    // don't edit This
-    // here i will do check of media type
-    // if image,pdf i will call createBlog
-    // otherwise i will first upload video on cloudinary first, get both url,thumbnai url,etc and with that i will
-    // send form data on backend. considerig this
+  const onSubmit = async (formData) => {
+    const { mutateAsync: createBlog } = useCreateBlog();
 
-    // if you have to suggest any tihng write down here. leave space for scalability
+    try {
+      setIsUploading(true); // spinner start
 
-    const finalData = {
-      ...data,
-      tags,
-      mediaType,
-    };
+      let uploadedMedia = null;
 
-    console.log(finalData);
+      if (["image", "video", "pdf"].includes(mediaType)) {
+        const uploadDetails = await uploadToCloudinary({
+          type: "blog",
+          fileType: mediaType,
+          file: formData.file,
+        });
+
+        uploadedMedia = {
+          secureUrl: uploadDetails.secure_url,
+          publicId: uploadDetails.public_id,
+          resourceType: uploadDetails.resource_type,
+          format: uploadDetails.format,
+          bytes: uploadDetails.bytes,
+        };
+      }
+
+      const finalData = {
+        title: formData.title,
+        content: formData.content,
+        tags,
+        category: formData.category,
+        mediaType,
+        media: uploadedMedia,
+        thumbnail:
+          mediaType === "video"
+            ? {
+                secureUrl: uploadDetails.eager?.[0]?.secure_url,
+                publicId: uploadDetails.eager?.[0]?.public_id,
+              }
+            : null,
+      };
+
+      await createBlog(finalData);
+
+      toast.success("Blog created successfully");
+    } catch (error) {
+      toast.error("Something went wrong");
+    } finally {
+      setIsUploading(false); // spinner stop
+    }
   };
+
+  if (isUploading) {
+    return (
+      <div className="flex items-center justify-center min-h-[300px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-600 font-medium">Uploading... Please wait</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <form
@@ -69,9 +117,7 @@ export default function BlogCreateForm() {
           className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-green-500 outline-none"
         />
         {errors.title && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.title.message}
-          </p>
+          <p className="text-red-500 text-sm mt-1">{errors.title.message}</p>
         )}
       </div>
 
@@ -95,9 +141,7 @@ export default function BlogCreateForm() {
           className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-green-500 outline-none"
         />
         {errors.content && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.content.message}
-          </p>
+          <p className="text-red-500 text-sm mt-1">{errors.content.message}</p>
         )}
       </div>
 
@@ -108,9 +152,15 @@ export default function BlogCreateForm() {
           onChange={(e) => setMediaType(e.target.value)}
           className="bg-green-100 text-black w-full border rounded-lg p-3 focus:ring-2 focus:ring-green-500 outline-none"
         >
-          <option value="image" className="bg-grey">Image</option>
-          <option value="video" className="bg-grey">Video</option>
-          <option value="pdf" className="bg-grey">Document</option>
+          <option value="image" className="bg-grey">
+            Image
+          </option>
+          <option value="video" className="bg-grey">
+            Video
+          </option>
+          <option value="pdf" className="bg-grey">
+            Document
+          </option>
         </select>
       </div>
 
@@ -123,9 +173,7 @@ export default function BlogCreateForm() {
           className="text-white w-full border rounded-lg p-3 "
         />
         {errors.file && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.file.message}
-          </p>
+          <p className="text-red-500 text-sm mt-1">{errors.file.message}</p>
         )}
       </div>
 
@@ -150,8 +198,7 @@ export default function BlogCreateForm() {
         <div className="flex gap-2">
           <input
             {...register("currentTag", {
-              validate: () =>
-                tags.length > 0 || "At least one tag is required",
+              validate: () => tags.length > 0 || "At least one tag is required",
             })}
             placeholder="Enter tag"
             className="flex-1 border rounded-lg p-3 focus:ring-2 focus:ring-green-500 outline-none"

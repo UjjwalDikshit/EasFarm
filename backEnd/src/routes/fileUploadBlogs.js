@@ -17,7 +17,7 @@ const router = express.Router();
 // Universal upload route (image, video, pdf)
 router.post("/upload",uploadLimiter, upload.single("file"), uploadFile);
 // better for file > 100 MB to upload
-router.post("/upload/signature", getUploadSignature);
+router.post("/signature", getUploadSignature);
 router.delete("/media", deleteMedia);
 
 module.exports = router;

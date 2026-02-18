@@ -40,7 +40,7 @@ export default function MainBlogPage() {
         {/* CONTENT SECTION */}
         <div className="bg-base-100 rounded-2xl shadow-lg p-6 transition-all duration-300">
           {openBlogOption === "create" && <BlogCreateForm />}
-          {openBlogOption === "myBlogs" && <BlogPrintSection />}
+          {openBlogOption === "myBlogs" && <BlogPrintSection enabled={openBlogOption==='myBlogs'}/>}
         </div>
 
       </div>

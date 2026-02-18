@@ -11,11 +11,15 @@ import BlogListPage from "../src/blog/pages/BlogListPage";
 import { Routes, Route } from "react-router";
 import BlogDetailPage from "./blog/pages/BlogDetailPage";
 import UserDashboard from "./pages/UserDashboard";
+import { Toaster } from "react-hot-toast";
+
+
 
 function App() {
   return (
     <>
       <Routes>
+        <Toaster position="top-right" />
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />

@@ -14,45 +14,52 @@ const blog = require("../../models/blogs/blog");
 const createBlog = async (req, res) => {
   try {
     const {
-      authorId = req.user._id,
       title,
-      slug,
       content,
-      coverImage,
-      videoUrl,
       tags = [],
       category,
       isFeatured = false,
+      mediaType,
+      media,
+      thumbnail,
     } = req.body;
 
-    if (!authorId || !title) {
+    const authorId = req.user._id;
+
+    // ✅ Required fields
+    if (!authorId || !title || !content) {
       return res.status(400).json({
         success: false,
-        message: "authorId, title  are required",
+        message: "authorId, title and content are required",
       });
     }
 
-    // auto-generate slug if not provided
-    const finalSlug =
-      slug ||
-      title
-        .toLowerCase()
-        .trim()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/(^-|-$)/g, "");
+    // ✅ Slug generation
+    let finalSlug = title
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+    // ✅ Prevent duplicate slug
+    const existingSlug = await Blog.findOne({ slug: finalSlug });
+    if (existingSlug) {
+      finalSlug = `${finalSlug}-${Date.now()}`;
+    }
 
     const blog = await Blog.create({
       authorId,
       title,
       slug: finalSlug,
       content,
-      coverImage,
-      videoUrl,
       tags,
       category,
-      status: "draft",
       isFeatured,
+      status: "draft",
       publishedAt: null,
+      mediaType,
+      media,
+      thumbnail,
     });
 
     return res.status(201).json({
@@ -297,30 +304,46 @@ const readBlogUsingSlug = async (req, res) => {
   }
 };
 
-//  send using paging
 const myBlog = async (req, res) => {
   try {
-    const { token } = req.cookies;
+    const user = req.user; 
+    const authorId = user._id;
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Unauthorized",
-      });
-    }
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
-    const authorId = payload._id;
+    const MAX_LIMIT = 50;
+    const finalLimit = Math.min(limit, MAX_LIMIT);
 
+    const skip = (page - 1) * finalLimit;
+
+    
+    const totalBlogs = await Blog.countDocuments({
+      authorId,
+      isDeleted: false,
+    });
+
+    
     const blogs = await Blog.find({
       authorId,
       isDeleted: false,
-    }).sort({ createdAt: -1 });
+    })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(finalLimit);
 
     return res.status(200).json({
       success: true,
       message: "My blogs fetched successfully",
       data: blogs,
+      pagination: {
+        total: totalBlogs,
+        page,
+        limit: finalLimit,
+        totalPages: Math.ceil(totalBlogs / finalLimit),
+        hasNextPage: page * finalLimit < totalBlogs,
+        hasPrevPage: page > 1,
+      },
     });
   } catch (error) {
     console.error("My blogs error:", error);
@@ -332,22 +355,33 @@ const myBlog = async (req, res) => {
   }
 };
 
-const publishBlog = async (req, res) => {
+
+const updateBlogStatus = async (req, res) => {
   try {
     const { id } = req.params;
+    const { status } = req.body;
+
+    const allowedStatuses = ["published", "archived",'draft'];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status value",
+      });
+    }
+
+    const updateData = {
+      status,
+      publishedAt: status === "published" ? new Date() : null,
+    };
 
     const blog = await Blog.findOneAndUpdate(
       {
         _id: id,
         isDeleted: false,
       },
-      {
-        $set: {
-          status: "published",
-          publishedAt: new Date(),
-        },
-      },
-      { new: true },
+      { $set: updateData },
+      { new: true }
     );
 
     if (!blog) {
@@ -359,58 +393,22 @@ const publishBlog = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: "Blog published successfully",
+      message:
+        status === "published"
+          ? "Blog published successfully"
+          : "Blog moved to archived successfully",
       data: blog,
     });
   } catch (error) {
-    console.error("Publish blog error:", error);
+    console.error("Update blog status error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to publish blog",
+      message: "Failed to update blog status",
     });
   }
 };
 
-const unpublishBlog = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const blog = await Blog.findOneAndUpdate(
-      {
-        _id: id,
-        isDeleted: false,
-      },
-      {
-        $set: {
-          status: "draft",
-          publishedAt: null,
-        },
-      },
-      { new: true },
-    );
-
-    if (!blog) {
-      return res.status(404).json({
-        success: false,
-        message: "Blog not found",
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Blog moved to draft successfully",
-      data: blog,
-    });
-  } catch (error) {
-    console.error("Unpublish blog error:", error);
-
-    return res.status(500).json({
-      success: false,
-      message: "Failed to unpublish blog",
-    });
-  }
-};
 
 const getFeaturedBlogs = async (req, res) => {
   try {
@@ -1666,8 +1664,7 @@ module.exports = {
   readBlog,
   readBlogUsingSlug,
   myBlog,
-  publishBlog,
-  unpublishBlog,
+  updateBlogStatus, 
   getFeaturedBlogs,
   featureBlog,
   unfeatureBlog,

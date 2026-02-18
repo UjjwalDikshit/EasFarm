@@ -8,20 +8,7 @@ const uploadFolderMap = {
     video: {
       folder: "production/blogs/videos",
       resource_type: "video",
-      eager: [
-        {
-          format: "jpg",
-          width: 320,
-          height: 180,
-          crop: "fill",
-        },
-        {
-          format: "jpg",
-          width: 1280,
-          height: 720,
-          crop: "fill",
-        },
-      ],
+      eager:  "w_320,h_180,c_fill,f_jpg|w_1280,h_720,c_fill,f_jpg",
       eager_async:false,
     },
     pdf: {
