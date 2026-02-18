@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 export default function BlogCreateForm() {
   const [mediaType, setMediaType] = useState("image");
   const [isUploading, setIsUploading] = useState(false);
-
+  const { mutateAsync: createBlog } = useCreateBlog();
   const [tags, setTags] = useState([]);
 
   const {
@@ -40,7 +40,6 @@ export default function BlogCreateForm() {
   };
 
   const onSubmit = async (formData) => {
-    const { mutateAsync: createBlog } = useCreateBlog();
 
     try {
       setIsUploading(true); // spinner start
@@ -48,6 +47,8 @@ export default function BlogCreateForm() {
       let uploadedMedia = null;
 
       if (["image", "video", "pdf"].includes(mediaType)) {
+        console.log(mediaType);
+        
         const uploadDetails = await uploadToCloudinary({
           type: "blog",
           fileType: mediaType,

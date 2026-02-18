@@ -23,8 +23,8 @@ export const changeStatus = (blogId, status) =>
     status,
   });
 
-export const getSignature = async ({type}) => {
-  const res = await axiosClient.post("/cloudinary/signature",{type});
+export const getSignature = async ({type,fileType}) => {
+  const res = await axiosClient.post("/cloudinary/signature",{type,fileType});
   console.log(res);
   return res.data;
 };

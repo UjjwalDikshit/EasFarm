@@ -13,18 +13,16 @@ import BlogDetailPage from "./blog/pages/BlogDetailPage";
 import UserDashboard from "./pages/UserDashboard";
 import { Toaster } from "react-hot-toast";
 
-
-
 function App() {
   return (
     <>
+      <Toaster position="top-right" />
       <Routes>
-        <Toaster position="top-right" />
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path= "/weather" element = {<WeatherButton/>}/>
+        <Route path="/weather" element={<WeatherButton />} />
         <Route path="/products/tools" element={<AllToolsPage />} />
         <Route path="/products/fertilisers" element={<AllProductsPage />} />
         <Route path="/products/husbandry" element={<WorkInProgress />} />
@@ -33,7 +31,7 @@ function App() {
         {/* BLOG ROUTES */}
         <Route path="/blog" element={<BlogListPage />} />
         <Route path="/blog/:blogId" element={<BlogDetailPage />} />
-        <Route path='/user/dashboard/' element={<UserDashboard/>}/>
+        <Route path="/user/dashboard/" element={<UserDashboard />} />
       </Routes>
     </>
   );

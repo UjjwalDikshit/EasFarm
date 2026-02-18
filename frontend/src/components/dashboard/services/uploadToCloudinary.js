@@ -16,22 +16,23 @@ export const uploadToCloudinary = async ({ type, fileType, file }) => {
 
   //  Prepare form data
   const formData = new FormData();
-  formData.append("file", file);
+  formData.append("file", file[0]);
   formData.append("api_key", apiKey);
   formData.append("timestamp", timestamp);
   formData.append("signature", signature);
   formData.append("folder", folder);
-  formData.append("resource_type",resource_type);
-  
+
   if (eager) formData.append("eager", eager);
-  if (typeof eager_async !== "undefined")
+  if (typeof eager_async !== "undefined") {
     formData.append("eager_async", eager_async);
+  }
 
   //  Upload to correct endpoint
   const res = await axios.post(
     `https://api.cloudinary.com/v1_1/${cloudName}/${resource_type}/upload`,
-    formData
+    formData,
   );
 
   return res.data;
 };
+

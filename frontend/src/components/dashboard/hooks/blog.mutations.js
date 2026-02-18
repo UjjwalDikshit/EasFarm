@@ -51,6 +51,76 @@ export const useCreateBlog = () => {
   });
 };
 
+
+// export const useCreateBlog = () => {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationFn: myBlogApi.createBlog,
+
+//     onMutate: async (newBlog) => {
+//       await queryClient.cancelQueries({ queryKey: ["myBlogs"] });
+
+//       const previousData = queryClient.getQueryData(["myBlogs"]);
+//       const tempId = `temp-${Date.now()}`;
+
+//       queryClient.setQueryData(["myBlogs"], (old) => {
+//         if (!old?.pages?.length) return old;
+
+//         return {
+//           ...old,
+//           pages: old.pages.map((page, index) => {
+//             if (index !== 0) return page;
+
+//             return {
+//               ...page,
+//               data: [
+//                 { ...newBlog, _id: tempId, isOptimistic: true },
+//                 ...(page.data || []),
+//               ],
+//             };
+//           }),
+//         };
+//       });
+
+//       return { previousData, tempId };
+//     },
+
+//     onError: (err, newBlog, context) => {
+//       if (context?.previousData) {
+//         queryClient.setQueryData(["myBlogs"], context.previousData);
+//       }
+//     },
+
+//     onSuccess: (response, newBlog, context) => {
+//       const realBlog = response.data; // 👈 your backend structure
+
+//       queryClient.setQueryData(["myBlogs"], (old) => {
+//         if (!old?.pages?.length) return old;
+
+//         return {
+//           ...old,
+//           pages: old.pages.map((page, index) => {
+//             if (index !== 0) return page;
+
+//             return {
+//               ...page,
+//               data: page.data.map((blog) =>
+//                 blog._id === context.tempId ? realBlog : blog
+//               ),
+//             };
+//           }),
+//         };
+//       });
+//     },
+
+//     onSettled: () => {
+//       queryClient.invalidateQueries({ queryKey: ["myBlogs"] });
+//     },
+//   });
+// };
+
+
 export const useDeleteBlog = () => {
   const queryClient = useQueryClient();
 
