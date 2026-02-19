@@ -16,6 +16,8 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
     commentsCount,
     publishedAt,
     myReaction,
+    mediaType,
+    media
   } = blog;
 
   const isLiked = myReaction == "like";
@@ -27,12 +29,12 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
       onClick={() => navigate(`/blog/${_id}`)}
     >
       {/* Media */}
-      {(coverImage || videoUrl) && (
+      { mediaType && (//(coverImage || videoUrl)
         <figure className="max-h-64 overflow-hidden">
-          {coverImage ? (
-            <img src={coverImage} alt={title} className="w-full object-cover" />
+          {mediaType == 'image' ? (
+            <img src={ media.secureUrl} alt={title} className="w-full object-cover" />
           ) : (
-            // <video src={videoUrl} controls className="w-full object-cover" />
+            // <video src={media.secureUrl} controls className="w-full object-cover" />
             <iframe
               width="560"
               height="315"

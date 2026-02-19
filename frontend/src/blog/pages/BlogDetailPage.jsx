@@ -1,16 +1,19 @@
 import { useParams } from "react-router-dom";
 import { useState } from "react";
+import Report from "../components/list/Report";
+import createReport from "../services/report.api";
 import DOMPurify from "dompurify";
-
+import { Flag } from "lucide-react";
 import { useBlogById } from "../hooks/useBlogs";
 import { useToggleBlogLike } from "../hooks/useBlogReaction";
+import CommentItemUniqueBlog from "../components/comment/CommentItemUniqueBlog";
+
 import {
   useComments,
   useAddComment,
   useReplyComment,
 } from "../hooks/useComment";
 
-import CommentItemUniqueBlog from "../components/comment/CommentItemUniqueBlog";
 
 const BlogDetailPage = ({ currentUser }) => {
   const { blogId } = useParams();
@@ -29,7 +32,11 @@ const BlogDetailPage = ({ currentUser }) => {
   const addCommentMutation = useAddComment(blogId, currentUser);
 
   const [showComments, setShowComments] = useState(false);
+
   const [commentText, setCommentText] = useState("");
+
+  // report handling
+  const [openReport, setOpenReport] = useState(false);
 
   if (isLoading)
     return (
@@ -43,7 +50,6 @@ const BlogDetailPage = ({ currentUser }) => {
 
   if (isError || !blog) return <p>Blog not found</p>;
 
-  // const comments = data?.pages.flatMap((page) => page.data.comments) || [];
 
   const handleAddComment = (e) => {
     e.preventDefault();
@@ -83,12 +89,37 @@ const BlogDetailPage = ({ currentUser }) => {
           }
         </span>
         {/* change updated -> published at */}
+        <button className="btn btn-sm " onClick={() => setOpenReport(true)}>
+          <Flag /> Report
+        </button>
+        {openReport && (
+          <dialog className="modal modal-open">
+            <div className="modal-box relative">
+              {/* Close Button */}
+              <button
+                className="btn btn-sm btn-circle absolute right-2 top-2"
+                onClick={() => setOpenReport(false)}
+              >
+                ✕
+              </button>
+
+              <Report
+                blogId={blog._id}
+                reportAboutThisBlog={(data) => {
+                  createReport(data); // call API
+                  setOpenReport(false); // close popup
+                }}
+              />
+            </div>
+          </dialog>
+        )}
+       
       </div>
 
       {/* MEDIA */}
-      {blog.coverImage && (
+      {blog.mediaType == "image" && (
         <img
-          src={blog.coverImage}
+          src={blog.media.secureUrl}
           alt={blog.title}
           className="w-full rounded-xl"
         />
@@ -130,40 +161,39 @@ const BlogDetailPage = ({ currentUser }) => {
 
       {/* META */}
       <div className="flex items-center justify-between py-4 border-y">
-          {/* LEFT SIDE - COUNTS */}
-          <div className="flex items-center gap-6 text-sm text-black-600">
-            <span>Views : {blog.viewsCount}</span>
-            <span>Reactions : {blog.likesCount}</span>
-            <span>Responses : {blog.commentsCount}</span>
-          </div>
+        {/* LEFT SIDE - COUNTS */}
+        <div className="flex items-center gap-6 text-sm text-black-600">
+          <span>Views : {blog.viewsCount}</span>
+          <span>Reactions : {blog.likesCount}</span>
+          <span>Responses : {blog.commentsCount}</span>
+        </div>
 
-          {/* RIGHT SIDE - ACTIONS */}
-          <div className="flex items-center gap-3">
-            {/* LIKE BUTTON */}
-            <button
-              onClick={() => likeMutation.mutate()}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 active:scale-95 shadow-sm
+        {/* RIGHT SIDE - ACTIONS */}
+        <div className="flex items-center gap-3">
+          {/* LIKE BUTTON */}
+          <button
+            onClick={() => likeMutation.mutate()}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 active:scale-95 shadow-sm
                   ${
                     blog.myReaction
                       ? "bg-red-50 text-red-600 shadow-red-100"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`
-                }
-            >
-              <span className="text-lg">❤️</span>
-              <span>{blog.myReaction ? "Liked" : "Like"}</span>
-            </button>
+                  }`}
+          >
+            <span className="text-lg">❤️</span>
+            <span>{blog.myReaction ? "Liked" : "Like"}</span>
+          </button>
 
-            {/* COMMENT BUTTON */}
-            <button
-              onClick={() => setShowComments((prev) => !prev)}
-              className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 active:scale-95 shadow-sm"
-            >
-              <span className="text-lg">💬</span>
-              <span>Comment</span>
-            </button>
-          </div>
-      </div> 
+          {/* COMMENT BUTTON */}
+          <button
+            onClick={() => setShowComments((prev) => !prev)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 active:scale-95 shadow-sm"
+          >
+            <span className="text-lg">💬</span>
+            <span>Comment</span>
+          </button>
+        </div>
+      </div>
 
       {showComments && (
         <div className="mt-6 space-y-6">
@@ -194,12 +224,10 @@ const BlogDetailPage = ({ currentUser }) => {
                 blogId={blogId}
                 currentUser={currentUser}
               />
-            ))
+            )),
           )}
-
         </div>
       )}
-      
     </div>
   );
 };

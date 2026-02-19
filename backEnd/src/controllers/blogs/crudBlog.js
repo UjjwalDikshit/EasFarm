@@ -1140,11 +1140,12 @@ const getBlogsViewStats = async (req, res) => {
 const createReport = async (req, res) => {
   try {
     const reporterId = req.user._id;
-    const { targetType, targetId, reason } = req.body;
+    const { targetType, targetId, type,reason } = req.body;
 
-    if (!targetType || !targetId || !reason) {
-      return res.status(400).json({ error: "All fields are required" });
+    if (!targetType || !targetId || !type) {
+      return res.status(400).json({ error: "All required fields missing" });
     }
+
 
     // Validate target type
     if (!["blog", "comment"].includes(targetType)) {
@@ -1177,6 +1178,7 @@ const createReport = async (req, res) => {
       targetType,
       targetId,
       reason,
+      type,
     });
 
     res.status(201).json({
@@ -1184,7 +1186,7 @@ const createReport = async (req, res) => {
       reportId: report._id,
     });
   } catch (err) {
-    res.status(500).json({ error: "Failed to submit report" });
+    res.status(500).json({ error: "Failed to submit report",err });
   }
 };
 

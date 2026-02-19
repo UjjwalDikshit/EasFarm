@@ -49,8 +49,8 @@ blog_router.get("/user/interests", getUserInterests);
 blog_router.post("/user/interests", authMiddleware, createUserInterests);
 blog_router.put("/user/interests", updateUserInterests);
 
-blog_router.get("/reports", listReports);
-blog_router.post("/reports", createReport);
+blog_router.get("/reports",authMiddleware, listReports);
+blog_router.post("/reports", authMiddleware,createReport);
 blog_router.put("/reports/:id/status", updateReportStatus);
 
 blog_router.get("/featured", getFeaturedBlogs);

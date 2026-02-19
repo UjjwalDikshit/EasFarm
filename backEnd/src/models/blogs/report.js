@@ -20,9 +20,12 @@ const reportSchema = new mongoose.Schema(
       index: true
     },
 
+    type:{
+      type:String,
+      required:true,
+    },
     reason: {
       type: String,
-      required: true
     },
 
     status: {
@@ -36,3 +39,9 @@ const reportSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("Report", reportSchema);
+/*
+   reporterId,
+      targetType,
+      type,
+      targetId,
+      reason */
