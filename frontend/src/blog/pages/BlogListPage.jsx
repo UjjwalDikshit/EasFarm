@@ -10,12 +10,12 @@ const BlogListPage = () => {
   const [openCommentBlogId, setOpenCommentBlogId] = useState(null);
 
   const { mutate: reactToBlog } = useBlogReaction();
-
-  const {
-    data,
-    isLoading,
-    isError,
-  } = useBlogs({ page, limit: 20, search, status: "published" });
+  const { data, isLoading, isError } = useBlogs({
+    page,
+    limit: 20,
+    search,
+    status: "published",
+  });
 
   const handleReaction = (blogId) => {
     reactToBlog({
@@ -28,7 +28,8 @@ const BlogListPage = () => {
     setOpenCommentBlogId((prev) => (prev === blogId ? null : blogId));
   };
 
-  const blogs = data?.blogs || []; // ✅ FIX
+  const blogs = data?.blogs || [];
+
 
   return (
     <section className="max-w-6xl mx-auto px-4 py-6">
@@ -54,31 +55,33 @@ const BlogListPage = () => {
       )}
 
       {/* Blog Grid */}
-      <div > {/*className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" */}
+      <div>
+        {" "}
+        {/*className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" */}
         {isLoading &&
-          Array.from({ length: 6 }).map((_, i) => (
-            <BlogCardSkeleton key={i} />
-          ))}
-
+          Array.from({ length: 6 }).map((_, i) => <BlogCardSkeleton key={i} />)}
         {!isLoading &&
-          blogs.map((blog) => (  // ✅ FIX
-            <div key={blog._id}>
-              <BlogCard
-                blog={blog}
-                onReaction={handleReaction}
-                onCommentClick={handleCommentClick}
-                isCommentOpen={openCommentBlogId === blog._id}
-              />
-            </div>
-          ))}
+          blogs.map(
+            (
+              blog, // ✅ FIX
+            ) => (
+              <div key={blog._id}>
+                <BlogCard
+                  blog={blog}
+                  onReaction={handleReaction}
+                  onCommentClick={handleCommentClick}
+                  isCommentOpen={openCommentBlogId === blog._id}
+                />
+              </div>
+            ),
+          )}
       </div>
 
       {/* Empty State */}
-      {!isLoading && blogs.length === 0 && (  // ✅ FIX
-        <div className="text-center text-gray-500 mt-10">
-          No blogs found.
-        </div>
-      )}
+      {!isLoading &&
+        blogs.length === 0 && ( // ✅ FIX
+          <div className="text-center text-gray-500 mt-10">No blogs found.</div>
+        )}
 
       {/* Pagination */}
       <div className="flex justify-center gap-4 mt-10">

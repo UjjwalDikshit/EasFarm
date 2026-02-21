@@ -6,7 +6,7 @@ const redisClient = require("../config/redis");
 const Login = async (req, res) => {
   try {
     const { emailId, otp } = req.body;
-
+    console.log("emailId",emailId,typeof emailId, "otp",otp,typeof otp);
     if (!emailId || !otp) {
       return res.status(400).json({
         success: false,

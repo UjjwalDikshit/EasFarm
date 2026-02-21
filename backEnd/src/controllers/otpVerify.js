@@ -2,7 +2,7 @@ const redisClient = require("../config/redis");
 
 const toVerifyOtp = async (emailId, otp) => {
   
-  console.log(`Inside otpVerify ${emailId} ${otp}`);
+  console.log(`Inside otpVerify ${emailId} ${otp}`,typeof otp);
 
   const savedOtp = await redisClient.get(`emailOtp:${emailId}`);
 

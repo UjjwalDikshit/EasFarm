@@ -7,13 +7,23 @@ import WeatherButton from "./components/WeatherButton";
 import Signup from "./pages/Signup";
 import Login from "./components/login";
 import Logout from "./components/Logout";
-import BlogListPage from "../src/blog/pages/BlogListPage";
+import BlogMain from "../src/blog/pages/BlogMain";
 import { Routes, Route } from "react-router";
 import BlogDetailPage from "./blog/pages/BlogDetailPage";
 import UserDashboard from "./pages/UserDashboard";
+import WeatherPage from "./pages/WeatherPage";
 import { Toaster } from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { fetchUser } from "./features/authSlice";
+import { useEffect } from "react";
 
 function App() {
+   const dispatch = useDispatch();
+
+    useEffect(() => {
+      dispatch(fetchUser());
+    }, []);
+
   return (
     <>
       <Toaster position="top-right" />
@@ -28,10 +38,13 @@ function App() {
         <Route path="/products/husbandry" element={<WorkInProgress />} />
         <Route path="/schemes" element={<WorkInProgress />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/Detailed Weather" element={<WeatherPage />}/>
         {/* BLOG ROUTES */}
-        <Route path="/blog" element={<BlogListPage />} />
+        <Route path="/blog" element={<BlogMain />} />
+    
         <Route path="/blog/:blogId" element={<BlogDetailPage />} />
         <Route path="/user/dashboard/" element={<UserDashboard />} />
+
       </Routes>
     </>
   );

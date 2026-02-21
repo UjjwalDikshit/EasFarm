@@ -32,7 +32,7 @@ const BlogCard = ({ blog, onReaction, onCommentClick, isCommentOpen }) => {
       { mediaType && (//(coverImage || videoUrl)
         <figure className="max-h-64 overflow-hidden">
           {mediaType == 'image' ? (
-            <img src={ media.secureUrl} alt={title} className="w-full object-cover" />
+            <img src={ media.secureUrl } alt={title} className="w-full object-cover" />
           ) : (
             // <video src={media.secureUrl} controls className="w-full object-cover" />
             <iframe

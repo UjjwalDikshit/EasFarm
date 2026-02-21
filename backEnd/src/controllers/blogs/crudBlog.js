@@ -1,4 +1,3 @@
-const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const Blog = require("../../models/blogs/blog");
 const UserInterest = require("../../models/blogs/userInterest");
@@ -7,6 +6,7 @@ const Report = require("../../models/blogs/report");
 const Reaction = require("../../models/blogs/reaction");
 const BlogInteraction = require("../../models/blogs/BlogInteration");
 const Comment = require("../../models/blogs/comment");
+const farmers = require("../../models/farmerSchema");
 // const User = require('../../models/farmerSchema');
 
 const blog = require("../../models/blogs/blog");
@@ -1271,31 +1271,73 @@ const getUserInterests = async (req, res) => {
 };
 
 const createUserInterests = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const userId = req.user._id;
     const { tags = [], categories = [] } = req.body;
 
-    // Check if already exists
-    const existing = await UserInterest.findOne({ userId });
+    if (!Array.isArray(tags) || !Array.isArray(categories)) {
+      return res.status(400).json({
+        error: "Tags and categories must be arrays",
+      });
+    }
+
+    // Remove duplicates & clean values
+    const cleanTags = [...new Set(tags.map(t => t.trim()))];
+    const cleanCategories = [...new Set(categories.map(c => c.trim()))];
+
+    const existing = await UserInterest.findOne({ userId }).session(session);
     if (existing) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(409).json({
         error: "User interests already exist. Use update instead.",
       });
     }
 
-    const interests = await UserInterest.create({
-      userId,
-      tags: [...new Set(tags)],
-      categories: [...new Set(categories)],
-      lastInteractedAt: new Date(),
-    });
+    const interests = await UserInterest.create(
+      [
+        {
+          userId,
+          tags: cleanTags,
+          categories: cleanCategories,
+          lastInteractedAt: new Date(),
+        },
+      ],
+      { session }
+    );
 
-    res.status(201).json({
-      message: "User interests created",
-      interests,
+    const user = await farmers.findById(userId).session(session);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    user.interests = {
+      tags: cleanTags,
+      categories: cleanCategories,
+    };
+
+    user.hasCompletedOnboarding = true;
+
+    await user.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json({
+      message: "User interests created successfully",
+      interests: interests[0],
     });
   } catch (err) {
-    res.status(500).json({ error: "Failed to create user interests", err });
+    await session.abortTransaction();
+    session.endSession();
+
+    return res.status(500).json({
+      error: "Failed to create user interests",
+    });
   }
 };
 

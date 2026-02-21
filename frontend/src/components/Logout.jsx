@@ -1,10 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axiosClient from "../utils/axiosClient";
+import { fetchUser } from "../features/authSlice";
+import { useDispatch } from "react-redux";
 
 export default function Logout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const hasLoggedOut = useRef(false); // 🛑 StrictMode guard
 
   useEffect(() => {
@@ -14,6 +17,8 @@ export default function Logout() {
     const logout = async () => {
       try {
         await axiosClient.post("/user/logout");
+        dispatch(fetchUser());
+
         alert('Logout Successful');
       } catch (err) {
         console.error("Logout error:", err);

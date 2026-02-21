@@ -2,11 +2,14 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, KeyRound, LogIn } from "lucide-react";
 import axiosClient from "../utils/axiosClient";
+import {verifyOtpAndLogin} from '../../src/features/authSlice'
+import { useDispatch } from "react-redux";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch();
 
   const navigate = useNavigate();
 
@@ -39,17 +42,10 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const response = await axiosClient.post("/user/login", {
-        emailId: email,
-        otp,
-      });
+    const response = await dispatch(
+      verifyOtpAndLogin({ emailId: email, otp:Number(otp) })
+    ).unwrap();
 
-      const { success, message } = response.data;
-
-      if (!success) {
-        alert(message || "Login failed");
-        return;
-      }
 
       // token is already stored in cookie (httpOnly)
       alert("Login successful");
