@@ -43,7 +43,7 @@ const WeatherPage = () => {
 
       // Fetch weather data from your backend
       const response = await fetch(
-        `http://localhost:5000/api/weather?lat=${userLocation.lat}&lon=${userLocation.lon}`
+        `http://localhost:4000/api/weather?lat=${userLocation.lat}&lon=${userLocation.lon}`
       );
       
       if (!response.ok) {

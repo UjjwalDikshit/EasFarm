@@ -28,7 +28,7 @@
 //   }
 // )
 
-// // 🔥 2. Initial State
+// //  2. Initial State
 // const InitialStateForUserInfo = {
 //   user: null,
 //   isAuthenticated: false,

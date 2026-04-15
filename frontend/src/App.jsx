@@ -1,4 +1,4 @@
-import Home from "./pages/home";
+import Home from "./pages/Home";
 import About from "./pages/About";
 import AllToolsPage from "./components/machines/AllToolsPage";
 import AllProductsPage from "./components/fertilisers/AllProductPage";
@@ -16,6 +16,7 @@ import { Toaster } from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { fetchUser } from "./features/authSlice";
 import { useEffect } from "react";
+import Chat from "./pages/Chat";
 
 function App() {
    const dispatch = useDispatch();
@@ -38,6 +39,7 @@ function App() {
         <Route path="/products/husbandry" element={<WorkInProgress />} />
         <Route path="/schemes" element={<WorkInProgress />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/chat" element={<Chat/>}/>
         <Route path="/Detailed Weather" element={<WeatherPage />}/>
         {/* BLOG ROUTES */}
         <Route path="/blog" element={<BlogMain />} />

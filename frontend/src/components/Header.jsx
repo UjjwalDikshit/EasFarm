@@ -375,6 +375,9 @@ const Header = () => {
             <a onClick={() => navigate("/blog")}>Blogs</a>
           </li>
           <li>
+            <a onClick={()=> navigate("/chat")}>Chat</a>
+          </li>
+          <li>
             <a onClick={() => navigate("/about")}>About</a>
           </li>
           <li>

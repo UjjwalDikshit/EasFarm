@@ -102,7 +102,20 @@ const farmerSchema = new mongoose.Schema(
       enum: ["farmer", "serprovider", "admin"],
       default: "farmer",
     },
-
+    // for chat_service
+    chat: {
+      chatUserId: {
+        type: String,
+        unique: true,
+        sparse: true,
+      },
+      displayName: String,
+      isChatUser: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    // again blogSystem
     interests: {
       categories: [String],
       tags: [String],
