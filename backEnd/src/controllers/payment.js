@@ -42,7 +42,7 @@ const create_order =  async (req, res) => {
       key: process.env.RAZORPAY_KEY_ID, // frontend uses this
     });
   } catch (error) {
-    console.error("❌ Create order error:", error);
+    console.error(" Create order error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
@@ -72,6 +72,7 @@ const verify_payment =  async (req, res) => {
     // Store payment
     await Payment.create({
       order_id: razorpay_order_id,
+      customer:req.user._id,
       payment_id: razorpay_payment_id,
     });
 
@@ -84,7 +85,7 @@ const verify_payment =  async (req, res) => {
     if (error.code === 11000) {
       return res.json({ success: true, message: "Payment already stored" });
     }
-    console.error("❌ Verify payment error:", error);
+    console.error(" Verify payment error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 };

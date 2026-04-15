@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import MainBlogPage from "../components/dashboard/Blog/MainBlogPage";
+import TransactionList from "../components/dashboard/trasactions/TransactionList";
 import WorkInProgress from "./WorkInProgress";
 
 const UserDashboard = () => {
@@ -108,7 +109,7 @@ const UserDashboard = () => {
           {whichTab === "machinery" && <WorkInProgress />}
           {whichTab === "fertiliser" && <WorkInProgress />}
           {whichTab === "husbandry" && <WorkInProgress />}
-          {whichTab === "transaction" && <WorkInProgress />}
+          {whichTab === "transaction" && <TransactionList/>}
           {whichTab === "orders" && <WorkInProgress />}
           {whichTab === "schemes" && <WorkInProgress />}
 

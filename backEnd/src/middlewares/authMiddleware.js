@@ -8,7 +8,7 @@ const authMiddleware = async (req, res, next) => {
     return res.status(401).json({ LoggedIn:false, message: "Not authenticated" });
   }
 
-  // 🔒 check blacklist
+  //  check blacklist
   const isBlacklisted = await redisClient.get(`blacklist:${token}`);
   if (isBlacklisted) {
     return res.status(401).json({LoggedIn:false, message: "Session expired" });

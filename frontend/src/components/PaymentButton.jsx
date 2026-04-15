@@ -2,14 +2,12 @@ import React, { useEffect, useState } from "react";
 import axiosClient from "../utils/axiosClient";
 import { useNavigate } from "react-router-dom";
 
-
 function PaymentButton({ amount }) {
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const navigate = useNavigate();
 
-  
   /* ==========================
      LOAD RAZORPAY SDK
   ========================== */
@@ -24,7 +22,7 @@ function PaymentButton({ amount }) {
     script.async = true;
 
     script.onload = () => setScriptLoaded(true);
-    script.onerror = () => console.error("❌ Razorpay SDK failed to load");
+    script.onerror = () => console.error(" Razorpay SDK failed to load");
 
     document.body.appendChild(script);
   }, []);
@@ -35,20 +33,16 @@ function PaymentButton({ amount }) {
   const handlePayment = async () => {
     if (!scriptLoaded || isProcessing) return;
 
-    try{
-      const loginStatus = await axiosClient.post('/user/checkLogin');
-
-    }
-    catch(err){
-      alert('Login Rirst Then Only You Can Make Payment');
-      if(!err.response.data.loggedIn){
+    try {
+      const loginStatus = await axiosClient.post("/user/checkLogin");
+    } catch (err) {
+      alert("Login Rirst Then Only You Can Make Payment");
+      if (!err.response.data.loggedIn) {
         localStorage.setItem("redirectedAfterLogin", location.pathname);
-        navigate('/login');
+        navigate("/login");
         return;
       }
     }
-
- 
 
     setIsProcessing(true);
 
@@ -56,13 +50,11 @@ function PaymentButton({ amount }) {
       // ₹ → paise
       const amountInPaise = amount * 100;
 
-      console.log('berfore creating order')
-      // 1️⃣ Create Order
-      const orderRes = await axiosClient.post(
-        "/payment/create-order",
-        { amount: amountInPaise }
-      );
-
+      console.log("berfore creating order");
+      // 1️ Create Order
+      const orderRes = await axiosClient.post("/payment/create-order", {
+        amount: amountInPaise,
+      });
 
       const orderData = orderRes.data;
 
@@ -70,7 +62,7 @@ function PaymentButton({ amount }) {
         throw new Error("Order creation failed");
       }
 
-      // 2️⃣ Razorpay options
+      // 2️Razorpay options
       const options = {
         key: orderData.key,
         amount: orderData.amount,
@@ -78,25 +70,50 @@ function PaymentButton({ amount }) {
         order_id: orderData.order_id,
         name: "EasFarm",
         description: "Tool Rental Payment",
+        method: {
+          upi: true, // ENABLE UPI
+        },
+
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: "Pay via UPI",
+                instruments: [
+                  {
+                    method: "upi",
+                    flows: ["collect", "intent"], //  IMPORTANT
+                  },
+                ],
+              },
+            },
+            sequence: ["block.upi"], //  force UPI first
+            preferences: {
+              show_default_blocks: true, //  hides QR-first layout
+            },
+          },
+        },
 
         handler: async (response) => {
           try {
-            // 3️⃣ Verify Payment
+            // 3️ Verify Payment
             const verifyRes = await axiosClient.post(
               "/payment/verify-payment",
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
-              }
+              },
             );
 
             const verifyData = verifyRes.data;
 
             if (verifyData.success) {
-              alert(`✅ Payment Successful\nPayment ID: ${verifyData.payment_id}`);
+              alert(
+                ` Payment Successful\nPayment ID: ${verifyData.payment_id}`,
+              );
             } else {
-              alert("❌ Payment verification failed");
+              alert(" Payment verification failed");
             }
           } catch (err) {
             console.error("Verification error:", err);
@@ -124,15 +141,13 @@ function PaymentButton({ amount }) {
       const rzp = new window.Razorpay(options);
 
       rzp.on("payment.failed", (response) => {
-        alert("❌ Payment failed: " + response.error.description);
+        alert(" Payment failed: " + response.error.description);
         setIsProcessing(false);
       });
 
-      // 🔥 OPEN CHECKOUT
+      //  OPEN CHECKOUT
       rzp.open();
-
     } catch (error) {
-      
       console.error("Payment error:", error);
       alert(error.response?.data?.message || "Something went wrong");
       setIsProcessing(false);
