@@ -41,6 +41,7 @@ export const createChatAccount = async ({
 export const updateFarmerChat = async ({
   chatUserId,
   chatDisplayName,
+  uniqueId,
 }) => {
   try {
     const res = await axiosClient.post(
@@ -48,6 +49,7 @@ export const updateFarmerChat = async ({
       {
         chatUserId,
         chatDisplayName,
+        uniqueId,
       },
       {
         withCredentials: true, //   if using cookies

@@ -33,6 +33,7 @@ const Login = async (req, res) => {
         _id: frmer._id,
         role: frmer.role,
         emailId: frmer.emailId,
+        chat:frmer.chat,
         iat: Math.floor(Date.now() / 1000),
       },
       process.env.JWT_SECRET,

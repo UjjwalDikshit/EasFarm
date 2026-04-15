@@ -8,6 +8,7 @@ const updateFarmer = async (req, res) => {
     const {
       chatUserId,
       chatDisplayName,
+      uniqueId
       // future fields can be added here
     } = req.body;
 
@@ -30,6 +31,7 @@ const updateFarmer = async (req, res) => {
     if (chatUserId) {
       farmer.chat.chatUserId = chatUserId;
       farmer.chat.isChatUser = true;
+      farmer.chat.uniqueId = uniqueId;
     }
 
     if (chatDisplayName) {

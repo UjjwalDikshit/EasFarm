@@ -150,7 +150,7 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-// ✅ System prompt
+//  System prompt
 const SYSTEM_PROMPT = {
   role: "user", // must be 'system'
   parts: [

@@ -1,6 +1,16 @@
 import PaymentButton from "../PaymentButton";
 
 export default function ToolCard({ tool }) {
+
+  const handleChat = () => {
+  if (tool.chat?.uniqueId) {
+    window.open(
+      `http://localhost:5173`,// /${tool.chat.uniqueId}
+      "_blank"
+    );
+  }
+};
+
   return (
     <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-blue-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
       
@@ -25,11 +35,10 @@ export default function ToolCard({ tool }) {
             </p>
           </div>
 
-          {/* ✅ PAYMENT BUTTON */}
           <PaymentButton amount={tool.rentPrice} />
         </div>
 
-        {/* PROVIDER */}
+        {/* FARMER INFO */}
         <div className="flex items-center pt-3 border-t border-gray-100">
           <div className="bg-blue-100 rounded-full w-9 h-9 flex items-center justify-center mr-3">
             <svg
@@ -48,19 +57,38 @@ export default function ToolCard({ tool }) {
             </svg>
           </div>
 
-          <div>
-            <p className="text-xs text-gray-500">Provider</p>
+          <div className="flex-1">
+            <p className="text-xs text-gray-500">Farmer</p>
+
+            {/* Name */}
             <p className="text-sm font-medium text-black">
-              {tool.serviceProvider?.name || "N/A"}
+              {tool.farmer?.fullName || "N/A"}
+            </p>
+
+            {/* Unique ID */}
+            <p className="text-xs text-blue-600">
+              ID: {tool.chat?.uniqueId || "No ID"}
+            </p>
+
+            {/* Rating (optional) */}
+            <p className="text-xs text-yellow-600">
+              ⭐ {tool.farmer?.rating || "New"}
             </p>
           </div>
+
+          {/* CHAT BUTTON */}
+          <button
+            onClick={handleChat}
+            disabled={!tool.chat?.uniqueId}
+            className="ml-2 px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300"
+          >
+            Chat
+          </button>
         </div>
       </div>
     </div>
   );
 }
-
-
 // import PaymentButton from "../PaymentButton";
 
 // export default function ToolCard({ tool }) {
@@ -74,10 +102,10 @@ export default function ToolCard({ tool }) {
 //           </span>
 //         </div>
 //       </div>
-      
+
 //       <div className="p-4">
 //         <p className="text-sm text-gray-600 mb-3 leading-relaxed">{tool.description}</p>
-        
+
 //         <div className="grid grid-cols-2 gap-2 mb-3">
 //           <div className="bg-blue-50 rounded-lg p-2">
 //             <p className="text-xs text-blue-700 font-medium">Category</p>
@@ -92,7 +120,7 @@ export default function ToolCard({ tool }) {
 //             <PaymentButton className="text-sm font-medium text-black" amount={tool.rentPrice} />
 //           </div>
 //         </div>
-        
+
 //         <div className="flex items-center mt-4 pt-3 border-t border-gray-100">
 //           <div className="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mr-2">
 //             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -108,8 +136,6 @@ export default function ToolCard({ tool }) {
 //     </div>
 //   );
 // }
-
-
 
 // // export default function ToolCard({ tool, index }) {
 // //   return (
@@ -147,7 +173,7 @@ export default function ToolCard({ tool }) {
 // //             </svg>
 // //             <span className="text-sm">{tool.category}</span>
 // //           </div>
-          
+
 // //           <div className="flex items-center gap-2">
 // //             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
 // //               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -157,7 +183,7 @@ export default function ToolCard({ tool }) {
 // //             </svg>
 // //             <span className="text-sm font-medium">₹{tool.rentPrice}/{tool.rentUnit}</span>
 // //           </div>
-          
+
 // //           <div className="flex items-center gap-2 col-span-2">
 // //             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
 // //               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -172,15 +198,15 @@ export default function ToolCard({ tool }) {
 // //           <button className="btn btn-primary btn-sm rounded-full px-4">
 // //             Rent Now
 // //           </button>
-          
+
 // //           <div className="flex items-center">
 // //             <div className="rating rating-xs mr-1">
 // //               {[1, 2, 3, 4, 5].map((star) => (
-// //                 <input 
-// //                   key={star} 
-// //                   type="radio" 
-// //                   name={`rating-${tool.id || index}`} 
-// //                   className="mask mask-star-2 bg-yellow-400" 
+// //                 <input
+// //                   key={star}
+// //                   type="radio"
+// //                   name={`rating-${tool.id || index}`}
+// //                   className="mask mask-star-2 bg-yellow-400"
 // //                   defaultChecked={star === 4}
 // //                 />
 // //               ))}

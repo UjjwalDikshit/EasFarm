@@ -8,7 +8,7 @@ export default function Chat() {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   const navigate = useNavigate();
-  const hasOpened = useRef(false); // 🔥 prevents multiple tabs
+  const hasOpened = useRef(false); //  prevents multiple tabs
 
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -19,7 +19,7 @@ export default function Chat() {
 
   const [error, setError] = useState("");
 
-  // 🔥 OPEN CHAT SAFELY
+  //  OPEN CHAT SAFELY
   const openChatTab = () => {
     if (hasOpened.current) return;
 
@@ -27,15 +27,15 @@ export default function Chat() {
 
     window.open("http://localhost:5173", "_blank");
 
-    // ✅ redirect current tab to homepage
+    //  redirect current tab to homepage
     navigate("/");
   };
 
   useEffect(() => {
-    // ⛔ wait until auth state is known
+    //  wait until auth state is known
     if (isAuthenticated === undefined) return;
 
-    // ❌ only redirect if truly not logged in
+    //  only redirect if truly not logged in
     if (!isAuthenticated || !user) {
       navigate("/login");
       return;
@@ -44,7 +44,7 @@ export default function Chat() {
     setName(user.fullName || "");
     setDisplayName(user.fullName || "");
 
-    // ✅ already chat user → open directly
+    //  already chat user → open directly
     if (user?.chat?.chatUserId) {
       openChatTab();
       return;
@@ -69,18 +69,19 @@ export default function Chat() {
         displayName,
       });
 
-      // ❌ uniqueId taken
+      //  uniqueId taken
       if (!res.success && !res.chatUserId) {
         setError(res.message);
         return;
       }
 
-      // ✅ handle both new + existing
+      //  handle both new + existing
       const chatUserId = res.chatUserId || res.data?.chatUserId;
 
       const updateRes = await updateFarmerChat({
         chatUserId,
         chatDisplayName: displayName,
+        uniqueId
       });
 
       if (!updateRes.success) {
@@ -88,7 +89,7 @@ export default function Chat() {
         return;
       }
 
-      // ✅ OPEN CHAT
+      //  OPEN CHAT
       openChatTab();
 
     } catch (err) {
@@ -100,7 +101,7 @@ export default function Chat() {
     }
   };
 
-  // 🔄 Loader
+  //  Loader
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center bg-base-200">

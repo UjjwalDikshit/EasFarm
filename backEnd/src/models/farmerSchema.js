@@ -91,7 +91,7 @@ const farmerSchema = new mongoose.Schema(
         price: { type: Number, required: true }, // final price paid after discount
         serviceProvider: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "service-provider",
+          ref: "farmer",
           required: true,
         },
         purchasedAt: { type: Date, default: Date.now },
@@ -99,7 +99,7 @@ const farmerSchema = new mongoose.Schema(
     ],
     role: {
       type: String,
-      enum: ["farmer", "serprovider", "admin"],
+      enum: ["farmer", "admin"],
       default: "farmer",
     },
     // for chat_service
@@ -114,6 +114,10 @@ const farmerSchema = new mongoose.Schema(
         type: Boolean,
         default: false,
       },
+      uniqueId:{
+        type:String,
+        unique:true,
+      }
     },
     // again blogSystem
     interests: {

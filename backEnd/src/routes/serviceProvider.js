@@ -2,17 +2,18 @@ const express = require('express');
 const router = express.Router();
 const validUser = require('../middlewares/validUser');
 const validSurviceProvider = require('../middlewares/validSurviceProvider.js');
-const  {register,registerTools,getSpecificProviderTools, getAllTools}= require('../controllers/service_provider.js');
-const {sellSeedAndFertiliser , QuantityManipulator,updatePriceAndDisOfSeedAndFertiliser,buySeedAndFertiliser,removeProduct,getAllSeedFertiliserProducts} = require('../controllers/fertiliser_provider.js')
+const  {register,registerTools,getSpecificFarmerTools, getAllTools}= require('../controllers/service_provider.js');
+const {sellSeedAndFertiliser , QuantityManipulator,updatePriceAndDisOfSeedAndFertiliser,buySeedAndFertiliser,removeProduct,getAllSeedFertiliserProducts} = require('../controllers/fertiliser_provider.js');
+const authMiddleware = require('../middlewares/authMiddleware.js');
 
 router.post('/provider/register',register);
-router.post('/tools/register',validSurviceProvider,registerTools);
-router.get('/specific-provider/tools/:providerId',validUser,getSpecificProviderTools);
+router.post('/tools/register',authMiddleware,registerTools);
+router.get('/specific-provider/tools/:providerId',validUser,getSpecificFarmerTools);
 router.get('/get-all-tools',getAllTools);
 
 
 
-router.post("/sell", sellSeedAndFertiliser);
+router.post("/sell",authMiddleware, sellSeedAndFertiliser);
 router.post('/quantity-manipulate',QuantityManipulator);
 router.put("/product/:productId/price-discount", updatePriceAndDisOfSeedAndFertiliser);
 router.post("/buy", buySeedAndFertiliser);

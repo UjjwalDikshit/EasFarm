@@ -1,52 +1,62 @@
+const mongoose = require("mongoose");
+const { tools } = require("../models/machinerySchrms");
+const farmer = require("../models/farmerSchema");
 
-// const mongoose = require('mongoose');
-const {tools,service_provider} = require('../models/machinerySchrms');
-const mongoose = require('mongoose');
-
+// =======================
+// 1. REGISTER FARMER
+// =======================
 const register = async (req, res) => {
   try {
-    const { name, contact, lng, lat } = req.body;
+    const { name, contact, lng, lat, chat } = req.body;
 
     if (!name || !contact || !lng || !lat) {
       return res.status(400).json({
         success: false,
-        message: "Name, contact, lng, and lat are required."
+        message: "Name, contact, lng, and lat are required.",
       });
     }
 
-    const existingProvider = await service_provider.findOne({ contact });
-    if (existingProvider) {
+    const existingFarmer = await farmer.findOne({ contact });
+    if (existingFarmer) {
       return res.status(400).json({
         success: false,
-        message: "Service provider with this contact already exists."
+        message: "Farmer with this contact already exists.",
       });
     }
 
-    const provider = await service_provider.create({
+    const newFarmer = await farmer.create({
       name,
       contact,
       location: {
         type: "Point",
-        coordinates: [lng, lat] 
-      }
+        coordinates: [lng, lat],
+      },
+      chat: {
+        chatUserId: chat?.chatUserId || null,
+        displayName: chat?.displayName || name,
+        isChatUser: chat?.isChatUser || false,
+        uniqueId: chat?.uniqueId||null,
+      },
     });
 
     res.status(201).json({
       success: true,
-      message: "Service provider registered successfully.",
-      provider
+      message: "Farmer registered successfully.",
+      farmer: newFarmer,
     });
-
   } catch (err) {
-    console.error("Error in provider registration:", err.message);
+    console.error("Error in farmer registration:", err.message);
     res.status(500).json({
       success: false,
       message: "Server error. Please try again later.",
-      error: err.message
+      error: err.message,
     });
   }
+};
 
-}
+// =======================
+// 2. REGISTER TOOL
+// =======================
 const registerTools = async (req, res) => {
   try {
     const {
@@ -57,24 +67,33 @@ const registerTools = async (req, res) => {
       rentUnit,
       lng,
       lat,
-      serviceProviderId
     } = req.body;
 
-    if (!name || !category || !rentPrice || !rentUnit || !lng || !lat || !serviceProviderId) {
+    const farmerId = req.user._id;
+    console.log(farmerId); // test
+
+    if (
+      !name ||
+      !category ||
+      !rentPrice ||
+      !rentUnit ||
+      !lng ||
+      !lat ||
+      !farmerId
+    ) {
       return res.status(400).json({
         success: false,
-        message: "All fields (name, category, rentPrice, rentUnit, lng, lat, serviceProviderId) are required."
+        message: "All fields are required.",
       });
     }
 
-    const provider = await service_provider.findById(serviceProviderId);
-    if (!provider) {
+    const existingFarmer = await farmer.findById(farmerId);
+    if (!existingFarmer) {
       return res.status(404).json({
         success: false,
-        message: "Service provider not found. Please register provider first."
+        message: "Farmer not found.",
       });
     }
-    console.log(provider);
 
     const tool = await tools.create({
       name,
@@ -84,175 +103,187 @@ const registerTools = async (req, res) => {
       rentUnit,
       location: {
         type: "Point",
-        coordinates: [lng, lat]
+        coordinates: [lng, lat],
       },
-      serviceProvider: serviceProviderId
+      farmer: farmerId,
+
+      //  attach chat for direct frontend use
+      chat: existingFarmer.chat,
     });
-    console.log(tool);
+
     res.status(201).json({
       success: true,
       message: "Tool registered successfully.",
-      tool
+      tool,
     });
-
   } catch (err) {
     console.error("Error registering tool:", err.message);
     res.status(500).json({
       success: false,
       message: "Server error while registering tool.",
-      error: err.message
+      error: err.message,
     });
   }
 };
-const getSpecificProviderTools =async (req,res)=>{// tools of specific provider
-    try{
-        const providerId = req.params.providerId; // from url params
-            // const Tools =   await tools.find({ 
-            //                 serviceProvider: new mongoose.service_provider.ObjectId(providerId) 
-            //                 });
-        const Tools = await tools.find({serviceProvider:providerId});
-        // const toolsAndProvider = await tools.find({surviceProvider : providerId}).populate("serviceProvider");
-        console.log(Tools);
-        console.log(providerId);
-        if(!Tools.length){
-            return res.status(404).send({
-                success: false,
-                message:"No tools found for this provider"
-            });
-        }
 
-        res.json({
-            success:true,
-            count: Tools.length,
-            Tools
-        });
-    }catch(err){
-        res.status(400).json({
-            success:false,
-            message:err.message
-        })
+// =======================
+// 3. GET TOOLS OF SPECIFIC FARMER
+// =======================
+const getSpecificFarmerTools = async (req, res) => {
+  try {
+    const farmerId = req.params.farmerId;
+
+    const Tools = await tools.find({ farmer: farmerId });
+
+    if (!Tools.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No tools found for this farmer",
+      });
     }
+
+    res.json({
+      success: true,
+      count: Tools.length,
+      Tools,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
 };
 
-const getAllTools = async(req,res)=>{ // with sorting filtering , in normal return all document but with paging
+// =======================
+// 4. GET ALL TOOLS (FILTER + GEO + PAGINATION)
+// =======================
+const getAllTools = async (req, res) => {
+  try {
+    let {
+      available,
+      minPrice,
+      maxPrice,
+      rating,
+      category,
+      isFeatured,
+      sortBy,
+      order,
+      lat,
+      lng,
+      maxDistance,
+      page,
+      limit,
+    } = req.query;
 
-    try{
-        let {
-            available,
-            minPrice,
-            maxPrice,
-            rating,
-            category,
-            isFeatured,
-            sortBy,
-            order,
-            lat,
-            lng,
-            maxDistance, // in meters
-            page,
-            limit
+    order = order === "asc" ? 1 : -1;
+    maxDistance = maxDistance ? Number(maxDistance) : 5000;
 
-        } = req.query;
+    let Page = Number(page) || 1;
+    let Limit = Number(limit) || 10;
+    let skip = (Page - 1) * Limit;
 
-        // default values
-        order = order === 'asc' ? 1: -1; // desc by default
-        maxDistance = maxDistance ? Number(maxDistance) : 5000 // 5 km default
+    let pipeline = [];
 
-
-        let Page = Number(page) || 1;
-        let Limit = Number(limit) || 10;
-        let skip = (Page - 1) * Limit;
-
-
-        let pipeline = [];
-
-        if (lat && lng) { // filter on basis of location if user give lat and lng
-            pipeline.push({
-                $geoNear: {
-                near: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
-                distanceField: "distance",
-                spherical: true,
-                maxDistance: maxDistance
-                }
-            });
-        }
-
-        let matchStage = {};
-
-        if(available !== undefined) matchStage.available = available === 'true';
-        if(rating) matchStage.rating = {$gte:Number(rating)};
-        if(category) matchStage.category = category;
-        if(isFeatured !== undefined) matchStage.isFeatured = isFeatured === 'true';
-        if(minPrice || maxPrice){
-            matchStage.rentPrice = {};
-            if(minPrice) matchStage.rentPrice.$gte = Number(minPrice);
-            if(maxPrice) matchStage.rentPrice.$lte = Number(maxPrice);
-        }
-
-        if(Object.keys(matchStage).length>0){
-            pipeline.push({$match:matchStage});// MongoDB’s aggregation $match stage works like an SQL WHERE clause.SELECT * FROM tools WHERE available = true;
-        }
-
-        const totalCount = await tools.countDocuments(matchStage);
-        const totalPages = Math.ceil(totalCount / Limit);
-
-
-
-        //Join serviceProvider so we can filter by location & address
-        pipeline.push({
-            $lookup: { //  यह एक "जॉइन" ऑपरेशन है।
-                from: "service_providers",
-                localField: "serviceProvider",
-                foreignField: "_id",
-                as: "serviceProvider"
-            }
-        });
-        pipeline.push({ $unwind: "$serviceProvider" });
-        
-
-        // sorting
-        if (sortBy) {
-            let sortField =
-                sortBy === "price"
-                ? "rentPrice"
-                : sortBy === "rating"
-                ? "rating"
-                : "createdAt";
-            pipeline.push({ $sort: { [sortField]: order } });
-        }
-
-
-        pipeline.push({ $skip: skip });
-        pipeline.push({ $limit: Limit });
-
-        const result = await tools.aggregate(pipeline);
-
-        // This executes the query you just built dynamically (with filters + sorting).
-        //User only sees the final filtered + sorted list of tools.
-
-        res.json({
-        success: true,
-        tools: result,
-        totalCount,
-        totalPages,
-        currentPage: Page,   // ✅ use numeric Page
-        count: result.length,
-        });
-    } catch (err) {
-        res.status(500).json({ success: false, message: err.message });
+    // GEO FILTER
+    if (lat && lng) {
+      pipeline.push({
+        $geoNear: {
+          near: {
+            type: "Point",
+            coordinates: [parseFloat(lng), parseFloat(lat)],
+          },
+          distanceField: "distance",
+          spherical: true,
+          maxDistance: maxDistance,
+        },
+      });
     }
+
+    // FILTERS
+    let matchStage = {};
+
+    if (available !== undefined) matchStage.available = available === "true";
+    if (rating) matchStage.rating = { $gte: Number(rating) };
+    if (category) matchStage.category = category;
+    if (isFeatured !== undefined) matchStage.isFeatured = isFeatured === "true";
+
+    if (minPrice || maxPrice) {
+      matchStage.rentPrice = {};
+      if (minPrice) matchStage.rentPrice.$gte = Number(minPrice);
+      if (maxPrice) matchStage.rentPrice.$lte = Number(maxPrice);
+    }
+
+    if (Object.keys(matchStage).length > 0) {
+      pipeline.push({ $match: matchStage });
+    }
+
+    const totalCount = await tools.countDocuments(matchStage);
+    const totalPages = Math.ceil(totalCount / Limit);
+
+    // JOIN FARMER
+    pipeline.push({
+      $lookup: {
+        from: "farmers",
+        localField: "farmer",
+        foreignField: "_id",
+        as: "farmer",
+      },
+    });
+
+    pipeline.push({
+      $unwind: {
+        path: "$farmer",
+        preserveNullAndEmptyArrays: true,
+      },
+    });
+
+    // SORT
+    if (sortBy) {
+      let sortField =
+        sortBy === "price"
+          ? "rentPrice"
+          : sortBy === "rating"
+            ? "rating"
+            : "createdAt";
+
+      pipeline.push({ $sort: { [sortField]: order } });
+    }
+
+    // PAGINATION
+    pipeline.push({ $skip: skip });
+    pipeline.push({ $limit: Limit });
+
+    const result = await tools.aggregate(pipeline);
+
+    res.json({
+      success: true,
+      tools: result,
+      totalCount,
+      totalPages,
+      currentPage: Page,
+      count: result.length,
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
 };
 
-
-module.exports = {register,registerTools, getSpecificProviderTools ,getAllTools};
-
+module.exports = {
+  register,
+  registerTools,
+  getSpecificFarmerTools,
+  getAllTools,
+};
 
 /*
         // https://gemini.google.com/app/d0b28c48c22a8a39?hl=en-IN read about much for above code 
         // https://chatgpt.com/c/68a6ced6-da3c-8327-b6da-f6c2f1d02f6e
         // 
 */
-
 
 // manything to add;
 
