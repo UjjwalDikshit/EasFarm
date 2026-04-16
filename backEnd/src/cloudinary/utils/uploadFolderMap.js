@@ -8,9 +8,8 @@ const uploadFolderMap = {
     video: {
       folder: "production/blogs/videos",
       resource_type: "video",
-      eager:  "w_320,h_180,c_fill,f_jpg|w_1280,h_720,c_fill,f_jpg",
+      eager: "w_320,h_180,c_fill,f_jpg|w_1280,h_720,c_fill,f_jpg",
       eager_async: true,
-
     },
     pdf: {
       folder: "production/blogs/pdf",
@@ -28,6 +27,11 @@ const uploadFolderMap = {
   reel: {
     folder: "production/reels/videos",
     resource_type: "video",
+  },
+  tools: {
+    image: {
+      folder: "tools/images",
+    },
   },
 };
 

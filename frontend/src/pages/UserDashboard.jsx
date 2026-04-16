@@ -12,6 +12,9 @@ import {
 import MainBlogPage from "../components/dashboard/Blog/MainBlogPage";
 import TransactionList from "../components/dashboard/trasactions/TransactionList";
 import WorkInProgress from "./WorkInProgress";
+import CreateTool from "../components/dashboard/serviceProvider/machinery/CreateTool";
+import MainToolsPage from "../components/dashboard/serviceProvider/machinery/MainToolsPage";
+import MainSeedFertiliserPage from "../components/dashboard/serviceProvider/seed/MainSeedFertiliserPage";
 
 const UserDashboard = () => {
   const [whichTab, setTab] = useState("blog");
@@ -20,7 +23,7 @@ const UserDashboard = () => {
     { key: "blog", label: "Create Blog", icon: FileText },
     { key: "machinery", label: "Rent Machinery", icon: Tractor },
     { key: "fertiliser", label: "Sell Fertiliser", icon: Leaf },
-    { key: "husbandry", label: "Sell Husbandry", icon: Beef },
+    // { key: "husbandry", label: "Sell Husbandry", icon: Beef },
     { key: "transaction", label: "Transaction History", icon: Wallet },
     { key: "orders", label: "My Orders", icon: ShoppingBag },
     { key: "schemes", label: "Govt. Schemes Applied", icon: Landmark },
@@ -106,9 +109,9 @@ const UserDashboard = () => {
         <div className="bg-base-100 rounded-2xl shadow-xl p-6 min-h-[400px]">
 
           {whichTab === "blog" && <MainBlogPage />}
-          {whichTab === "machinery" && <WorkInProgress />}
-          {whichTab === "fertiliser" && <WorkInProgress />}
-          {whichTab === "husbandry" && <WorkInProgress />}
+          {whichTab === "machinery" && <MainToolsPage/>}
+          {whichTab === "fertiliser" && <MainSeedFertiliserPage />}
+          {/* {whichTab === "husbandry" && <WorkInProgress />} */}
           {whichTab === "transaction" && <TransactionList/>}
           {whichTab === "orders" && <WorkInProgress />}
           {whichTab === "schemes" && <WorkInProgress />}

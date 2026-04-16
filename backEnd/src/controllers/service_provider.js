@@ -35,7 +35,7 @@ const register = async (req, res) => {
         chatUserId: chat?.chatUserId || null,
         displayName: chat?.displayName || name,
         isChatUser: chat?.isChatUser || false,
-        uniqueId: chat?.uniqueId||null,
+        uniqueId: chat?.uniqueId || null,
       },
     });
 
@@ -67,10 +67,11 @@ const registerTools = async (req, res) => {
       rentUnit,
       lng,
       lat,
+      imageUrl,
+      public_id,
     } = req.body;
 
     const farmerId = req.user._id;
-    console.log(farmerId); // test
 
     if (
       !name ||
@@ -79,7 +80,8 @@ const registerTools = async (req, res) => {
       !rentUnit ||
       !lng ||
       !lat ||
-      !farmerId
+      !farmerId ||
+      !imageUrl
     ) {
       return res.status(400).json({
         success: false,
@@ -101,13 +103,20 @@ const registerTools = async (req, res) => {
       category,
       rentPrice,
       rentUnit,
+
+      
+      image: {
+        url: imageUrl,
+        public_id: public_id,
+      },
+
       location: {
         type: "Point",
         coordinates: [lng, lat],
       },
+
       farmer: farmerId,
 
-      //  attach chat for direct frontend use
       chat: existingFarmer.chat,
     });
 
@@ -272,11 +281,52 @@ const getAllTools = async (req, res) => {
   }
 };
 
+const getMyTools = async (req, res) => {
+  try {
+    const farmerId = req.user._id;
+
+    if (!farmerId) {
+      return res.status(400).json({
+        success: false,
+        message: "Farmer ID not found in request.",
+      });
+    }
+
+    // Fetch tools created by this farmer
+    const myTools = await tools
+      .find({ farmer: farmerId })
+      .sort({ createdAt: -1 }) // latest first
+      .lean();
+
+    if (!myTools || myTools.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: "No tools found.",
+        tools: [],
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Tools fetched successfully.",
+      tools: myTools,
+    });
+  } catch (err) {
+    console.error("Error fetching tools:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching tools.",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   register,
   registerTools,
   getSpecificFarmerTools,
   getAllTools,
+  getMyTools,
 };
 
 /*
@@ -293,7 +343,7 @@ module.exports = {
 //
 // he $lookup operator in MongoDB is a powerful tool used for performing left outer joins between documents from two collections. This operator allows you to merge data from different collections based on specified criteria, enhancing and analyzing data across multiple documents.
 
-/* ✅ Example Requests:
+/*  Example Requests:
 
 // All tools (no filters):
 

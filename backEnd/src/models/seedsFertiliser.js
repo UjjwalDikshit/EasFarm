@@ -1,8 +1,13 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const seedsFertiliserSchema = new mongoose.Schema({
+const seedsFertiliserSchema = new mongoose.Schema(
+  {
     name: { type: String, required: true },
-    category: { type: String, enum: ["Seed", "Fertiliser", "Pesticide"], required: true },
+    category: {
+      type: String,
+      enum: ["Seed", "Fertiliser", "Pesticide"],
+      required: true,
+    },
 
     brand: { type: String, required: true },
     manufacturer: { type: String },
@@ -11,10 +16,16 @@ const seedsFertiliserSchema = new mongoose.Schema({
     isOrganic: { type: Boolean, default: false },
 
     description: { type: String },
-    image: { type: String },
-
+    image: {
+      url: String,
+      public_id: String,
+    },
     weight: { type: Number },
-    weightUnit: { type: String, enum: ["kg", "g", "litre", "ml", "packet"], default: "kg" },
+    weightUnit: {
+      type: String,
+      enum: ["kg", "g", "litre", "ml", "packet"],
+      default: "kg",
+    },
     packagingType: { type: String },
     stockQuantity: { type: Number, default: 0, required: true },
 
@@ -29,35 +40,38 @@ const seedsFertiliserSchema = new mongoose.Schema({
     safetyInfo: { type: String },
 
     seller: {
-        name: { type: String, required: true },
-        contact: { type: String, required: true },
-        farmer: { 
-            type: mongoose.Schema.Types.ObjectId, 
-            ref: "farmer", 
-            required: true 
-        }
+      name: { type: String, required: true },
+      contact: { type: String, required: true },
+      farmer: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "farmer",
+        required: true,
+      },
     },
 
     chat: {
-        chatUserId: String,
-        displayName: String,
-        isChatUser: Boolean,
-        uniqueId: String
+      chatUserId: String,
+      displayName: String,
+      isChatUser: Boolean,
+      uniqueId: String,
     },
 
     rating: { type: Number, min: 0, max: 5, default: 0 },
 
-    reviews: [{
+    reviews: [
+      {
         user: { type: mongoose.Schema.Types.ObjectId, ref: "farmer" },
         comment: String,
-        rating: { type: Number, min: 0, max: 5 }
-    }],
+        rating: { type: Number, min: 0, max: 5 },
+      },
+    ],
 
     stockAvailable: { type: Boolean, default: true },
     isFeatured: { type: Boolean, default: false },
+  },
+  { timestamps: true },
+);
 
-}, { timestamps: true });
-
-const s_and_f = mongoose.model('SeedsFertilisers', seedsFertiliserSchema);
+const s_and_f = mongoose.model("SeedsFertilisers", seedsFertiliserSchema);
 
 module.exports = { s_and_f };

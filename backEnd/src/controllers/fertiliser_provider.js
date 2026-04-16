@@ -1,53 +1,58 @@
 const { s_and_f } = require("../models/seedsFertiliser");
 const farmer = require("../models/farmerSchema");
+const cloudinary = require("../cloudinary/config/cloudinary");
 
 // =======================
 // SELL SEED / FERTILISER
 // =======================
 const sellSeedAndFertiliser = async (req, res) => {
   try {
-    const { name, category, brand, price } = req.body;
-    const seller = req.user._id;
-    if (!name || !category || !brand || !price || !seller) {
+    const {
+      name,
+      category,
+      brand,
+      price,
+      imageUrl,
+      public_id,
+    } = req.body;
+
+    const farmerId = req.user._id;
+
+    if (!name || !category || !brand || !price || !imageUrl) {
       return res.status(400).json({
         success: false,
-        message:
-          "All fields (name, category, brand, price, seller) are required.",
+        message: "Required fields missing",
       });
     }
-
-    const farmerId = seller;
 
     const farmerData = await farmer.findById(farmerId);
-    if (!farmerData) {
-      return res.status(404).json({
-        success: false,
-        message: "Farmer not found.",
-      });
-    }
 
-    const s_and_fs = await s_and_f.create({
+    const product = await s_and_f.create({
       ...req.body,
+
+      //  FIX IMAGE
+      image: {
+        url: imageUrl,
+        public_id: public_id,
+      },
+
       seller: {
         name: farmerData.fullName,
         contact: farmerData.mobileNumber,
         farmer: farmerData._id,
       },
-      chat:farmerData.chat,
+
+      chat: farmerData.chat,
     });
 
     res.status(201).json({
       success: true,
-      message: "Seed/Fertiliser registered successfully.",
-      s_and_fs,
+      message: "Product registered successfully",
+      product,
     });
+
   } catch (err) {
-    console.error("Error registering product:", err.message);
-    res.status(500).json({
-      success: false,
-      message: "Server error while registering product.",
-      error: err.message,
-    });
+    res.status(500).json({ message: "Server error", err });
   }
 };
 
@@ -137,6 +142,34 @@ const updatePriceAndDisOfSeedAndFertiliser = async (req, res) => {
   }
 };
 
+const updateProduct = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const updates = req.body;
+
+    const product = await s_and_f.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
+
+    Object.assign(product, updates);
+
+    await product.save();
+
+    res.json({
+      success: true,
+      message: "Product updated",
+      product,
+    });
+
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
 // =======================
 // BUY PRODUCT
 // =======================
@@ -201,35 +234,40 @@ const buySeedAndFertiliser = async (req, res) => {
 // =======================
 const removeProduct = async (req, res) => {
   try {
-    const { farmerId, productId } = req.body;
-
+    const {productId } = req.body;
+    const farmerId = req.user._id;
     const product = await s_and_f.findOne({
       _id: productId,
       "seller.farmer": farmerId,
     });
 
     if (!product) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
     }
 
-    product.stockAvailable = false;
-    product.isFeatured = false;
+    // 🔥 DELETE IMAGE FROM CLOUDINARY
+    if (product.image?.public_id) {
+      await cloudinary.uploader.destroy(product.image.public_id);
+    }
 
-    await product.save();
+    await s_and_f.findByIdAndDelete(productId);
 
     res.json({
       success: true,
-      message: "Product removed successfully",
-      product,
+      message: "Product deleted successfully",
     });
+
   } catch (error) {
-    console.error("Error removing product:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
-
 // =======================
 // GET ALL PRODUCTS
 // =======================
@@ -345,6 +383,33 @@ const getAllSeedFertiliserProducts = async (req, res) => {
   }
 };
 
+
+const getMySeedAndFertiliser = async (req, res) => {
+  try {
+    const farmerId = req.user._id;
+
+    const products = await s_and_f.find({
+      "seller.farmer": farmerId,
+    })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      message: "My products fetched successfully",
+      products,
+    });
+
+  } catch (err) {
+    console.error("Error fetching my products:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching products",
+      error: err.message,
+    });
+  }
+};
+
+
 module.exports = {
   sellSeedAndFertiliser,
   QuantityManipulator,
@@ -352,5 +417,7 @@ module.exports = {
   buySeedAndFertiliser,
   removeProduct,
   getAllSeedFertiliserProducts,
+  getMySeedAndFertiliser,
+  updateProduct,
 };
 // https://copilot.microsoft.com/chats/bc7ZohwfgXWYuf5LHaTJz

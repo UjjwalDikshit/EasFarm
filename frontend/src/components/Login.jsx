@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Mail, KeyRound, LogIn } from "lucide-react";
 import axiosClient from "../utils/axiosClient";
-import {verifyOtpAndLogin} from '../../src/features/authSlice'
+import { verifyOtpAndLogin } from "../../src/features/authSlice";
 import { useDispatch } from "react-redux";
 
 export default function Login() {
@@ -42,10 +42,9 @@ export default function Login() {
     try {
       setLoading(true);
 
-    const response = await dispatch(
-      verifyOtpAndLogin({ emailId: email, otp:Number(otp) })
-    ).unwrap();
-
+      const response = await dispatch(
+        verifyOtpAndLogin({ emailId: email, otp: Number(otp) }),
+      ).unwrap();
 
       // token is already stored in cookie (httpOnly)
       alert("Login successful");
@@ -65,7 +64,6 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-900 via-indigo-900 to-black">
       <div className="relative w-full max-w-md p-8 rounded-2xl bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_0_40px_rgba(139,92,246,0.4)]">
-
         <div className="absolute -top-20 -right-20 w-40 h-40 bg-violet-600 rounded-full blur-3xl opacity-40"></div>
 
         <h1 className="text-3xl font-bold text-center text-violet-200 mb-8">
@@ -116,6 +114,13 @@ export default function Login() {
           className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 font-semibold disabled:opacity-50"
         >
           <LogIn size={18} /> Login
+        </button>
+
+        <button
+          onClick={() => navigate("/signup")} // fix
+          className="w-full mt-3 py-2 rounded-xl border border-indigo-500 text-indigo-600 hover:bg-indigo-50 transition font-medium"
+        >
+          Sign Up
         </button>
       </div>
     </div>

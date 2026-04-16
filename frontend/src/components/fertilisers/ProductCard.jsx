@@ -21,7 +21,7 @@ export default function ProductCard({ product }) {
       {/* 1. IMAGE SECTION */}
       <div className="relative h-44 bg-gray-50 flex items-center justify-center p-4">
         <img
-          src={product.image || "/api/placeholder/300/200"}
+          src={product.image?.url || "/api/placeholder/300/200"}
           alt={product.name}
           className="max-h-full max-w-full object-contain"
         />

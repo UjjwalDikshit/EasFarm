@@ -1,4 +1,4 @@
-const cloudinary= require("../config/cloudinary");
+const cloudinary = require("../config/cloudinary");
 const uploadFolderMap = require("../utils/uploadFolderMap");
 
 const getUploadSignature = async (req, res) => {
@@ -15,7 +15,7 @@ const getUploadSignature = async (req, res) => {
     if (!["image", "video", "pdf"].includes(fileType)) {
       return res.status(400).json({ message: "Invalid file type" });
     }
-    const config = uploadFolderMap[type][fileType];
+    const config = uploadFolderMap[type][fileType] || uploadFolderMap[type];
 
     if (!config) {
       return res.status(400).json({ message: "Invalid file configuration" });
@@ -39,7 +39,6 @@ const getUploadSignature = async (req, res) => {
       process.env.CLOUDINARY_SECRET_API_KEY,
     );
 
-
     return res.json({
       timestamp,
       signature,
@@ -48,7 +47,9 @@ const getUploadSignature = async (req, res) => {
       apiKey: process.env.CLOUDINARY_API_KEY,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Signature generation failed",error });
+    return res
+      .status(500)
+      .json({ message: "Signature generation failed", error });
   }
 };
 
