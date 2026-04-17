@@ -14,9 +14,9 @@ const cloudinary = require("./src/routes/fileUploadBlogs");
 const cookieParser = require("cookie-parser");
 const payment = require("./src/routes/payment");
 const redisClient = require("./src/config/redis");
+const profile = require('./src/routes/profile');
+
 const cors = require("cors");
-
-
 const app = express();
 
 app.use(express.json());
@@ -43,6 +43,7 @@ app.use("/query", queryChat);
 app.use("/blog", blog);
 app.use("/cloudinary", cloudinary);
 app.use("/chat",chat);
+app.use("/profile",profile);
 
 const Initialisation = async () => {
   try {

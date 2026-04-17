@@ -17,6 +17,8 @@ import { useDispatch } from "react-redux";
 import { fetchUser } from "./features/authSlice";
 import { useEffect } from "react";
 import Chat from "./pages/Chat";
+import Profile from "./pages/Profile";
+import EditProfilePage from "./pages/EditProfilePage";
 
 function App() {
    const dispatch = useDispatch();
@@ -40,6 +42,8 @@ function App() {
         <Route path="/schemes" element={<WorkInProgress />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/chat" element={<Chat/>}/>
+        <Route path="/profile" element={<Profile/>}/>
+        <Route path="/edit-profile" element={<EditProfilePage />} />
         <Route path="/Detailed Weather" element={<WeatherPage />}/>
         {/* BLOG ROUTES */}
         <Route path="/blog" element={<BlogMain />} />

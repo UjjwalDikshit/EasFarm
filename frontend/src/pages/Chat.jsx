@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import { createChatAccount, updateFarmerChat } from "../chat/chatApi";
 import { Loader2, MessageCircle, AlertCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import {useNavigate} from "react-router-dom"
 
 export default function Chat() {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
