@@ -22,8 +22,13 @@ import EditProfilePage from "./pages/EditProfilePage";
 
 import SuperAdminRoute from "../src/components/superadmin/routes/SuperAdminRoute";
 import Dashboard from "../src/components/superadmin/superadmin/Dashboard";
-import ManageAdmins from "../src/components/superadmin/superadmin/ManageAdmins";
+import ManageAdmins from "./components/superadmin/superadmin/ManageAdmins";
 import HomeControl from "../src/components/superadmin/components/HomeControl";
+import ManageReports from "./components/admin/admin/ManageReports";
+import SchemeControl from "./components/admin/components/SchemaControl";
+import AdminRoute from "./components/admin/routes/AdminRoute";
+import AdminDashboard from "./components/admin/admin/AdminDashboard";
+import GovernmentSchemes from "./pages/GovernmentSchemes";
 
 function App() {
   const dispatch = useDispatch();
@@ -44,12 +49,12 @@ function App() {
         <Route path="/products/tools" element={<AllToolsPage />} />
         <Route path="/products/fertilisers" element={<AllProductsPage />} />
         <Route path="/husbandry" element={<WorkInProgress />} />
-        <Route path="/schemes" element={<WorkInProgress />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/edit-profile" element={<EditProfilePage />} />
         <Route path="/Detailed Weather" element={<WeatherPage />} />
+        <Route path="/schemes" element={<GovernmentSchemes/>}/>
         {/* BLOG ROUTES */}
         <Route path="/blog" element={<BlogMain />} />
 
@@ -79,6 +84,33 @@ function App() {
             <SuperAdminRoute>
               <HomeControl />
             </SuperAdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/reports"
+          element={
+            <AdminRoute>
+              <ManageReports />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/schemes"
+          element={
+            <AdminRoute>
+              < SchemeControl/>
+            </AdminRoute>
           }
         />
       </Routes>

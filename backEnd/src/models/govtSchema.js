@@ -1,75 +1,90 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const schemeSchema = new mongoose.Schema({
+const schemeSchema = new mongoose.Schema(
+  {
     title: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     }, // "PM-Kisan Samman Nidhi"
 
     shortTitle: {
-        type: String
+      type: String,
     }, // optional short name e.g., "PM-Kisan"
 
     description: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     }, // detailed scheme info
 
     category: {
-        type: String,
-        enum: ["Subsidy", "Loan", "Insurance", "Training", "Grant", "Other"],
-        required: true
+      type: String,
+      enum: ["Subsidy", "Loan", "Insurance", "Training", "Grant", "Other"],
+      required: true,
     }, // classification
 
     department: {
-        type: String
+      type: String,
     }, // issuing ministry/department e.g., "Ministry of Agriculture"
 
-    eligibility: [{
-        type: String
-    }], // e.g. ["Small/Marginal Farmers", "Women Farmers"]
+    eligibility: [
+      {
+        type: String,
+      },
+    ], // e.g. ["Small/Marginal Farmers", "Women Farmers"]
 
-    documentsRequired: [{
-        type: String
-    }], // ["Aadhar", "Bank Passbook", "Land Record"]
+    documentsRequired: [
+      {
+        type: String,
+      },
+    ], // ["Aadhar", "Bank Passbook", "Land Record"]
 
-    benefits: [{
-        type: String
-    }], // ["₹6000/year income support", "0% loan interest till 1 year"]
+    benefits: [
+      {
+        type: String,
+      },
+    ], // ["₹6000/year income support", "0% loan interest till 1 year"]
 
     howToApply: {
-        type: String
+      type: String,
     }, // "Apply online via official portal" or "Visit nearest CSC center"
 
     applicationLink: {
-        type: String
+      type: String,
     }, // official government portal link
 
     helpline: {
-        phone: String,
-        email: String
+      phone: String,
+      email: String,
     }, // support contact
 
-    startDate: { type: Date },
-    endDate: { type: Date }, // for time-bound schemes
+    startDate: {
+      type: Date,
+      default: null,
+    },
+    endDate: {
+      type: Date,
+      default: null,
+    },
 
     isActive: {
-        type: Boolean,
-        default: true
+      type: Boolean,
+      default: true,
     }, // for expired/closed schemes
 
-    region: [{
-        type: String
-    }], // applicable states/UTs e.g., ["Uttar Pradesh", "Maharashtra"]
+    region: {
+      type: [String],
+      default: ["All India"],
+    }, // applicable states/UTs e.g., ["Uttar Pradesh", "Maharashtra"]
 
     language: {
-        type: String,
-        default: "English"
-    }, // multilingual support
+      type: String,
+      enum: ["English", "Hindi", "Urdu", "Kashmiri"],
+      default: "English",
+    },
 
     lastUpdated: {
-        type: Date,
-        default: Date.now
+      type: Date,
+      default: Date.now,
     },
 
     // Engagement & trust
@@ -80,10 +95,11 @@ const schemeSchema = new mongoose.Schema({
     verified: { type: Boolean, default: false }, // verified by admin before showing
 
     tags: [{ type: String }], // ["PM-Kisan", "Subsidy", "Crop Insurance"]
+  },
+  { timestamps: true },
+);
 
-}, { timestamps: true });
-
-module.exports = mongoose.model('Scheme', schemeSchema);
+module.exports = mongoose.model("Scheme", schemeSchema);
 
 /**
  * 

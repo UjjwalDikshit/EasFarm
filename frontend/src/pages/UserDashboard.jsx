@@ -25,7 +25,7 @@ const UserDashboard = () => {
     { key: "fertiliser", label: "Sell Fertiliser", icon: Leaf },
     // { key: "husbandry", label: "Sell Husbandry", icon: Beef },
     { key: "transaction", label: "Transaction History", icon: Wallet },
-    { key: "orders", label: "My Orders", icon: ShoppingBag },
+    // { key: "orders", label: "My Orders", icon: ShoppingBag },
     { key: "schemes", label: "Govt. Schemes Applied", icon: Landmark },
   ];
 
@@ -113,7 +113,7 @@ const UserDashboard = () => {
           {whichTab === "fertiliser" && <MainSeedFertiliserPage />}
           {/* {whichTab === "husbandry" && <WorkInProgress />} */}
           {whichTab === "transaction" && <TransactionList/>}
-          {whichTab === "orders" && <WorkInProgress />}
+          {/* {whichTab === "orders" && <WorkInProgress />} */}
           {whichTab === "schemes" && <WorkInProgress />}
 
         </div>
