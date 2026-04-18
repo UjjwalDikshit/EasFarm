@@ -1,25 +1,38 @@
 // https://chatgpt.com/share/68a20036-fce0-8007-9e6c-3c32e7c76de9
 
-const homeSchema = require('../models/homeSchema');
+const homeSchema = require("../models/homeSchema");
 
-const homepage = async(req, res) => {
+const homepage = async (req, res) => {
+  try {
+    const home = await homeSchema.findOne();
 
-    try {
-        // const home_data = await homeSchema.find({}); // array of collection of homeschema, to find single collection this is ineffiecient
-        const first_home_doc = await homeSchema.findOne();
-
-        if (!first_home_doc) {
-            return res.status(404).send("No homepage data found");
-        }
-        // console.log(typeof first_home_doc.banners);
-        return res.send(first_home_doc);
-
-    } catch (err) {
-        return res.status(500).send("failed data Fetching inside homepage");
+    if (!home) {
+      return res.status(404).json({
+        success: false,
+        message: "No homepage data found",
+      });
     }
-}
+
+    return res.status(200).json({
+      success: true,
+      home: {
+        banners: home.banners || [],
+        categories: home.categories || [],
+      },
+    });
+
+  } catch (err) {
+    console.error("homepage error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch homepage data",
+    });
+  }
+};
 
 module.exports = homepage;
+
 
 /*
     [

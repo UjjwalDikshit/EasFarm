@@ -99,7 +99,7 @@ const farmerSchema = new mongoose.Schema(
     ],
     role: {
       type: String,
-      enum: ["farmer", "admin"],
+      enum: ["farmer", "admin","superAdmin"],
       default: "farmer",
     },
     // for chat_service

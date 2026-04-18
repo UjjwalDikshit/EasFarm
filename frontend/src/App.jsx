@@ -20,12 +20,17 @@ import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
 import EditProfilePage from "./pages/EditProfilePage";
 
-function App() {
-   const dispatch = useDispatch();
+import SuperAdminRoute from "../src/components/superadmin/routes/SuperAdminRoute";
+import Dashboard from "../src/components/superadmin/superadmin/Dashboard";
+import ManageAdmins from "../src/components/superadmin/superadmin/ManageAdmins";
+import HomeControl from "../src/components/superadmin/components/HomeControl";
 
-    useEffect(() => {
-      dispatch(fetchUser());
-    }, []);
+function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchUser());
+  }, []);
 
   return (
     <>
@@ -38,19 +43,44 @@ function App() {
         <Route path="/weather" element={<WeatherButton />} />
         <Route path="/products/tools" element={<AllToolsPage />} />
         <Route path="/products/fertilisers" element={<AllProductsPage />} />
-        <Route path="/products/husbandry" element={<WorkInProgress />} />
+        <Route path="/husbandry" element={<WorkInProgress />} />
         <Route path="/schemes" element={<WorkInProgress />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/chat" element={<Chat/>}/>
-        <Route path="/profile" element={<Profile/>}/>
+        <Route path="/chat" element={<Chat />} />
+        <Route path="/profile" element={<Profile />} />
         <Route path="/edit-profile" element={<EditProfilePage />} />
-        <Route path="/Detailed Weather" element={<WeatherPage />}/>
+        <Route path="/Detailed Weather" element={<WeatherPage />} />
         {/* BLOG ROUTES */}
         <Route path="/blog" element={<BlogMain />} />
-    
+
         <Route path="/blog/:blogId" element={<BlogDetailPage />} />
         <Route path="/user/dashboard/" element={<UserDashboard />} />
+        <Route
+          path="/super-admin"
+          element={
+            <SuperAdminRoute>
+              <Dashboard />
+            </SuperAdminRoute>
+          }
+        />
 
+        <Route
+          path="/super-admin/admins"
+          element={
+            <SuperAdminRoute>
+              <ManageAdmins />
+            </SuperAdminRoute>
+          }
+        />
+
+        <Route
+          path="/super-admin/home"
+          element={
+            <SuperAdminRoute>
+              <HomeControl />
+            </SuperAdminRoute>
+          }
+        />
       </Routes>
     </>
   );

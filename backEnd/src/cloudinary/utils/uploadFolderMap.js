@@ -20,6 +20,12 @@ const uploadFolderMap = {
     folder: "production/products/images",
     resource_type: "image",
   },
+  home: {
+    image: {
+      folder: "production/home/images",
+      resource_type: "image",
+    },
+  },
   course: {
     folder: "production/courses/videos",
     resource_type: "video",

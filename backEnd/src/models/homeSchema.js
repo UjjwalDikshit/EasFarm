@@ -1,23 +1,30 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
+const homeSchema = new mongoose.Schema({
+    banners: [
+        {
+            title: String,
+            link: String,
+            image: {
+                url: String,
+                public_id: String
+            }
+        }
+    ],
 
-const homeSchma = new mongoose.Schema({
-    banners: [{
-        title: String,
-        image: String,
-        link: String
-    }],
-    categories: [{
-        name: String,
-        icon: String,
-        link: String
-    }]
-
+    categories: [
+        {
+            name: String,
+            link: String,
+            icon: {
+                url: String,
+                public_id: String
+            }
+        }
+    ]
 });
 
-const homeSchema = mongoose.model('Home', homeSchma);
-module.exports = homeSchema;
-
+module.exports = mongoose.model("Home", homeSchema);
 /*
 
 title = what text user sees.

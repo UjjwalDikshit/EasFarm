@@ -375,7 +375,7 @@ const Header = () => {
             <a onClick={() => navigate("/blog")}>Blogs</a>
           </li>
           <li>
-            <a onClick={()=> navigate("/chat")}>Chat</a>
+            <a onClick={() => navigate("/chat")}>Chat</a>
           </li>
           <li>
             <a onClick={() => navigate("/about")}>About</a>
@@ -446,7 +446,16 @@ const Header = () => {
               <li>
                 <a onClick={() => navigate("/profile")}>Profile</a>
               </li>
-
+              {user.role === "superAdmin" && (
+                <li>
+                  <a onClick={() => navigate("/super-admin")}>Super Admin</a>
+                </li>
+              )}
+              {user.role === "admin" && (
+                <li>
+                  <a onClick={() => navigate("/admin")}>Admin</a>
+                </li>
+              )}
               <li>
                 <a onClick={handleClickOnLogout}>Logout</a>
               </li>

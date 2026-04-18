@@ -15,6 +15,7 @@ const cookieParser = require("cookie-parser");
 const payment = require("./src/routes/payment");
 const redisClient = require("./src/config/redis");
 const profile = require('./src/routes/profile');
+const superAdmin = require('./src/routes/superadmin')
 
 const cors = require("cors");
 const app = express();
@@ -38,12 +39,13 @@ app.use("/user", auth_user);
 app.use("/home", homepage);
 app.use("/service", service);
 app.use("/api", weather);
-app.use("/payment", payment); // write here
+app.use("/payment", payment);
 app.use("/query", queryChat);
 app.use("/blog", blog);
 app.use("/cloudinary", cloudinary);
 app.use("/chat",chat);
 app.use("/profile",profile);
+app.use('/superadmin',superAdmin);
 
 const Initialisation = async () => {
   try {
