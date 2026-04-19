@@ -3,6 +3,7 @@ import BlogCard from "../components/list/BlogCard";
 import BlogCardSkeleton from "../components/list/BlogCardSkeleton";
 import { useBlogs } from "../hooks/useBlogs";
 import { useBlogReaction } from "../hooks/useBlogReaction";
+import VideoPlayer from "../../utils/videoPlayer";
 
 const BlogListPage = () => {
   const [search, setSearch] = useState("");
@@ -63,7 +64,7 @@ const BlogListPage = () => {
         {!isLoading &&
           blogs.map(
             (
-              blog, // ✅ FIX
+              blog, //  FIX
             ) => (
               <div key={blog._id}>
                 <BlogCard
@@ -79,7 +80,7 @@ const BlogListPage = () => {
 
       {/* Empty State */}
       {!isLoading &&
-        blogs.length === 0 && ( // ✅ FIX
+        blogs.length === 0 && ( //  FIX
           <div className="text-center text-gray-500 mt-10">No blogs found.</div>
         )}
 

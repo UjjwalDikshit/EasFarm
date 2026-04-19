@@ -1,44 +1,34 @@
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import { useState } from "react";
-import Report from "../components/list/Report";
-import createReport from "../services/report.api";
 import DOMPurify from "dompurify";
 import { Flag } from "lucide-react";
+
+// Components & Utils
+import Report from "../components/list/Report";
+import BlogVideo from "../../utils/BlogVideo"; // Ensure this path is correct
+import CommentItemUniqueBlog from "../components/comment/CommentItemUniqueBlog";
+import createReport from "../services/report.api";
+
+// Hooks
 import { useBlogById } from "../hooks/useBlogs";
 import { useToggleBlogLike } from "../hooks/useBlogReaction";
-import CommentItemUniqueBlog from "../components/comment/CommentItemUniqueBlog";
-
-import {
-  useComments,
-  useAddComment,
-  useReplyComment,
-} from "../hooks/useComment";
-
+import { useComments, useAddComment } from "../hooks/useComment";
 
 const BlogDetailPage = ({ currentUser }) => {
   const { blogId } = useParams();
-
-  /* ================= BLOG ================= */
-
-  const { data: blog, isLoading, isError } = useBlogById(blogId);
-
-  const likeMutation = useToggleBlogLike(blogId);
-
-  /* ================= COMMENTS ================= */
-
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useComments(blogId);
-
-  const addCommentMutation = useAddComment(blogId, currentUser);
-
   const [showComments, setShowComments] = useState(false);
-
-  const [commentText, setCommentText] = useState("");
-
-  // report handling
   const [openReport, setOpenReport] = useState(false);
 
-  if (isLoading)
+  /* ================= BLOG DATA ================= */
+  const { data: blog, isLoading, isError } = useBlogById(blogId);
+  const likeMutation = useToggleBlogLike(blogId);
+
+  /* ================= COMMENTS DATA ================= */
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useComments(blogId);
+  const addCommentMutation = useAddComment(blogId, currentUser);
+
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <div className="w-10 h-10 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
@@ -47,19 +37,14 @@ const BlogDetailPage = ({ currentUser }) => {
         </p>
       </div>
     );
+  }
 
-  if (isError || !blog) return <p>Blog not found</p>;
-
-
-  const handleAddComment = (e) => {
-    e.preventDefault();
-    if (!commentText.trim()) return;
-
-    addCommentMutation.mutate(commentText);
-    setCommentText("");
-  };
-
-  /* ================= RENDER ================= */
+  if (isError || !blog)
+    return (
+      <div className="text-center py-20 text-red-500 font-medium">
+        Blog not found
+      </div>
+    );
 
   return (
     <div className="max-w-4xl mx-auto py-10 space-y-6">
@@ -74,28 +59,22 @@ const BlogDetailPage = ({ currentUser }) => {
       {/* AUTHOR + DATE */}
       <div className="flex items-center gap-3 text-sm text-gray-500">
         <span>By {blog.authorId?.fullName}</span>{" "}
-        {/* later can add image link + name */}
         <span>
-          {
-            new Date(blog.createdAt).toLocaleString("en-GB", {
-              day: "numeric",
-              month: "numeric",
-              year: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            })
-            // .replace(",", "")
-          }
+          {new Date(blog.createdAt).toLocaleString("en-GB", {
+            day: "numeric",
+            month: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          })}
         </span>
-        {/* change updated -> published at */}
         <button className="btn btn-sm " onClick={() => setOpenReport(true)}>
           <Flag /> Report
         </button>
         {openReport && (
           <dialog className="modal modal-open">
             <div className="modal-box relative">
-              {/* Close Button */}
               <button
                 className="btn btn-sm btn-circle absolute right-2 top-2"
                 onClick={() => setOpenReport(false)}
@@ -106,18 +85,17 @@ const BlogDetailPage = ({ currentUser }) => {
               <Report
                 blogId={blog._id}
                 reportAboutThisBlog={(data) => {
-                  createReport(data); // call API
-                  setOpenReport(false); // close popup
+                  createReport(data);
+                  setOpenReport(false);
                 }}
               />
             </div>
           </dialog>
         )}
-       
       </div>
 
       {/* MEDIA */}
-      {blog.mediaType == "image" && (
+      {blog.mediaType === "image" && blog.media?.secureUrl && (
         <img
           src={blog.media.secureUrl}
           alt={blog.title}
@@ -125,21 +103,13 @@ const BlogDetailPage = ({ currentUser }) => {
         />
       )}
 
-      {blog.videoUrl && (
-        // <video src={blog.videoUrl} controls className="w-full rounded-xl" />
-        <iframe
-          width="560"
-          height="315"
-          src="https://www.youtube.com/embed/LBCZaNd1rkM"
-          title="Vedic Guided Meditation"
-          frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          className="w-full object-cover"
-        ></iframe>
+      {/* VIDEO PLAYER ADDED HERE */}
+      {blog.mediaType === "video" && blog.media?.secureUrl && (
+        <div className="w-full aspect-video rounded-xl overflow-hidden shadow-lg">
+          <BlogVideo url={blog.media.secureUrl} />
+        </div>
       )}
 
-      {/* set for presenting content in formated form, store html at backend? there are better later i will try definitly, like editorJs , reactMarkDown*/}
       <div
         className="prose lg:prose-lg max-w-none"
         dangerouslySetInnerHTML={{
@@ -161,16 +131,13 @@ const BlogDetailPage = ({ currentUser }) => {
 
       {/* META */}
       <div className="flex items-center justify-between py-4 border-y">
-        {/* LEFT SIDE - COUNTS */}
         <div className="flex items-center gap-6 text-sm text-black-600">
           <span>Views : {blog.viewsCount}</span>
           <span>Reactions : {blog.likesCount}</span>
           <span>Responses : {blog.commentsCount}</span>
         </div>
 
-        {/* RIGHT SIDE - ACTIONS */}
         <div className="flex items-center gap-3">
-          {/* LIKE BUTTON */}
           <button
             onClick={() => likeMutation.mutate()}
             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 active:scale-95 shadow-sm
@@ -184,7 +151,6 @@ const BlogDetailPage = ({ currentUser }) => {
             <span>{blog.myReaction ? "Liked" : "Like"}</span>
           </button>
 
-          {/* COMMENT BUTTON */}
           <button
             onClick={() => setShowComments((prev) => !prev)}
             className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all duration-200 active:scale-95 shadow-sm"
@@ -201,6 +167,7 @@ const BlogDetailPage = ({ currentUser }) => {
             onSubmit={(e) => {
               e.preventDefault();
               const text = e.target.comment.value;
+              if (!text.trim()) return;
               addCommentMutation.mutate(text);
               e.target.reset();
             }}
