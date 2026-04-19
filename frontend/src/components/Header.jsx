@@ -337,19 +337,19 @@ import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../features/themeSlice";
 import { useLocation, useNavigate } from "react-router-dom";
-import { 
-  Menu, 
-  X, 
-  Sun, 
-  Moon, 
-  Sprout, 
-  User, 
-  LogOut, 
+import {
+  Menu,
+  X,
+  Sun,
+  Moon,
+  Sprout,
+  User,
+  LogOut,
   LayoutDashboard,
   Home,
   BookOpen,
   MessageSquare,
-  Info
+  Info,
 } from "lucide-react";
 import WeatherButton from "./WeatherButton";
 
@@ -382,8 +382,8 @@ const Header = () => {
     <header className="navbar bg-primary text-primary-content shadow-lg sticky top-0 z-50 px-4 h-16">
       {/* Logo */}
       <div className="flex-1">
-        <button 
-          onClick={() => handleNavigation("/")} 
+        <button
+          onClick={() => handleNavigation("/")}
           className="btn btn-ghost text-xl md:text-2xl font-bold font-serif normal-case flex items-center gap-2"
         >
           <Sprout size={28} className="text-secondary" />
@@ -396,7 +396,7 @@ const Header = () => {
         <ul className="menu menu-horizontal px-1 gap-1 items-center">
           {navLinks.map((link) => (
             <li key={link.path}>
-              <button 
+              <button
                 onClick={() => handleNavigation(link.path)}
                 className="hover:bg-white/10 active:bg-white/20 transition-colors"
               >
@@ -429,23 +429,70 @@ const Header = () => {
           </button>
         ) : (
           <div className="dropdown dropdown-end ml-4">
-            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar ring-2 ring-white/10">
+            <div
+              tabIndex={0}
+              role="button"
+              className="btn btn-ghost btn-circle avatar ring-2 ring-white/10"
+            >
               <div className="w-10 rounded-full bg-secondary flex items-center justify-center">
                 <span className="text-sm font-bold text-secondary-content">
-                  {user?.fullName?.split(" ").map((n) => n[0]).join("").toUpperCase()}
+                  {user?.fullName
+                    ?.split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()}
                 </span>
               </div>
             </div>
-            <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-2xl bg-base-100 rounded-box w-52 text-base-content border border-base-200">
+            <ul
+              tabIndex={0}
+              className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-2xl bg-base-100 rounded-box w-52 text-base-content border border-base-200"
+            >
               <li className="border-b border-base-300 mb-1">
                 <div className="flex flex-col p-2 pointer-events-none">
                   <span className="font-bold">{user?.fullName}</span>
                   <span className="text-xs opacity-60">{user?.emailId}</span>
                 </div>
               </li>
-              <li><button onClick={() => handleNavigation("/user/dashboard")}><LayoutDashboard size={16}/> Dashboard</button></li>
-              <li><button onClick={() => handleNavigation("/profile")}><User size={16}/> Profile</button></li>
-              <li><button onClick={handleClickOnLogout} className="text-error mt-2 pt-2 border-t border-base-200"><LogOut size={16}/> Logout</button></li>
+              <li>
+                <button onClick={() => handleNavigation("/user/dashboard")}>
+                  <LayoutDashboard size={16} /> Dashboard
+                </button>
+              </li>
+              <li>
+                <button onClick={() => handleNavigation("/profile")}>
+                  <User size={16} /> Profile
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={handleClickOnLogout}
+                  className="text-error mt-2 pt-2 border-t border-base-200"
+                >
+                  <LogOut size={16} /> Logout
+                </button>
+              </li>
+              {/* ADMIN */}
+              {user?.role === "admin" && (
+                <li>
+                  <button onClick={() => handleNavigation("/admin")}>
+                    <LayoutDashboard size={16} /> Admin Panel
+                  </button>
+                </li>
+              )}
+
+              {/* SUPER ADMIN */}
+              {user?.role === "superAdmin" && (
+                <>
+                  <li>
+                    <button
+                      onClick={() => handleNavigation("/super-admin")}
+                    >
+                      <LayoutDashboard size={16} /> Super Admin
+                    </button>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
         )}
@@ -470,20 +517,20 @@ const Header = () => {
           <ul className="menu p-4 gap-2">
             {navLinks.map((link) => (
               <li key={link.path}>
-                <button 
-                  onClick={() => handleNavigation(link.path)} 
+                <button
+                  onClick={() => handleNavigation(link.path)}
                   className="w-full justify-start text-lg py-3"
                 >
                   {link.icon} {link.name}
                 </button>
               </li>
             ))}
-            
+
             <div className="divider opacity-20 my-1"></div>
 
             <li>
-              <button 
-                onClick={() => dispatch(toggleTheme())} 
+              <button
+                onClick={() => dispatch(toggleTheme())}
                 className="w-full justify-start py-3"
               >
                 {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
@@ -492,13 +539,41 @@ const Header = () => {
             </li>
 
             {!isAuthenticated ? (
-              <li><button onClick={() => handleNavigation("/login")} className="btn btn-secondary w-full mt-2">Login</button></li>
+              <li>
+                <button
+                  onClick={() => handleNavigation("/login")}
+                  className="btn btn-secondary w-full mt-2"
+                >
+                  Login
+                </button>
+              </li>
             ) : (
               <>
                 <div className="divider opacity-20 my-1"></div>
-                <li><button onClick={() => handleNavigation("/user/dashboard")} className="py-3"><LayoutDashboard size={18}/> Dashboard</button></li>
-                <li><button onClick={() => handleNavigation("/profile")} className="py-3"><User size={18}/> Profile</button></li>
-                <li><button onClick={handleClickOnLogout} className="btn btn-error btn-outline w-full mt-4">Logout</button></li>
+                <li>
+                  <button
+                    onClick={() => handleNavigation("/user/dashboard")}
+                    className="py-3"
+                  >
+                    <LayoutDashboard size={18} /> Dashboard
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => handleNavigation("/profile")}
+                    className="py-3"
+                  >
+                    <User size={18} /> Profile
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={handleClickOnLogout}
+                    className="btn btn-error btn-outline w-full mt-4"
+                  >
+                    Logout
+                  </button>
+                </li>
               </>
             )}
           </ul>
