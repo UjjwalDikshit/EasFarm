@@ -1,69 +1,44 @@
 import { useState } from "react";
 import axiosClient from "../../../../utils/axiosClient";
+import { Trash2, Loader2 } from "lucide-react";
 
 export default function SFCard({ product, onUpdate }) {
   const [editing, setEditing] = useState(false);
   const [price, setPrice] = useState(product.price);
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false); // 👈 new
 
   const handleDelete = async () => {
-    if (!confirm("Delete this product?")) return;
+    // 👇 Replace confirm with better UX later
+    const ok = window.confirm("Delete this product?");
+    if (!ok) return;
+
+    // =========================
+    // OPTIMISTIC REMOVE
+    // =========================
+    setDeleting(true);
+    onUpdate && onUpdate(product._id, "delete"); // remove instantly
 
     try {
-      setLoading(true);
-
       await axiosClient.post("/service/remove", {
         productId: product._id,
       });
 
-      onUpdate && onUpdate(product._id, "delete");
-
     } catch (err) {
+      // =========================
+      // ROLLBACK if failed
+      // =========================
+      onUpdate && onUpdate(product._id, "restore", product);
+
       alert("Delete failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePriceUpdate = async () => {
-    try {
-      setLoading(true);
-
-      await axiosClient.put(`/service/product/${product._id}`, {
-        price: Number(price),
-      });
-
-      onUpdate && onUpdate(product._id, "update", { price });
-
-      setEditing(false);
-
-    } catch (err) {
-      alert("Update failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateStock = async (qty) => {
-    try {
-      setLoading(true);
-
-      await axiosClient.post("/service/quantity-manipulate", {
-        productId: product._id,
-        quantity: qty,
-      });
-
-      onUpdate && onUpdate(product._id, "stock", { qty });
-
-    } catch (err) {
-      alert("Stock update failed");
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
-    <div className="bg-base-200 rounded-xl shadow p-4 hover:shadow-lg transition duration-200 flex flex-col">
+    <div
+      className={`bg-base-200 rounded-xl shadow p-4 hover:shadow-lg transition-all duration-300 flex flex-col
+      ${deleting ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}
+    >
 
       {/* IMAGE */}
       {product.image?.url && (
@@ -75,11 +50,9 @@ export default function SFCard({ product, onUpdate }) {
       )}
 
       {/* TITLE */}
-      <h3 className="font-semibold text-lg leading-tight">
-        {product.name}
-      </h3>
+      <h3 className="font-semibold text-lg">{product.name}</h3>
 
-      {/* BRAND + CATEGORY */}
+      {/* META */}
       <p className="text-sm text-gray-500">
         {product.brand} • {product.category}
       </p>
@@ -99,12 +72,7 @@ export default function SFCard({ product, onUpdate }) {
         )}
       </div>
 
-      {/* WEIGHT */}
-      <p className="text-xs text-gray-500">
-        {product.weight} {product.weightUnit}
-      </p>
-
-      {/* STOCK BADGE */}
+      {/* STOCK */}
       <div className="mt-2">
         <span
           className={`badge ${
@@ -124,7 +92,7 @@ export default function SFCard({ product, onUpdate }) {
             <input
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="border border-gray-300 p-1 rounded w-full bg-transparent text-gray-500"
+              className="border p-1 rounded w-full bg-transparent"
             />
 
             <button
@@ -166,10 +134,20 @@ export default function SFCard({ product, onUpdate }) {
         {/* DELETE */}
         <button
           onClick={handleDelete}
-          className="w-full bg-red-500 text-white p-2 rounded"
+          className="w-full bg-red-500 text-white p-2 rounded flex items-center justify-center gap-2"
           disabled={loading}
         >
-          {loading ? "Processing..." : "Delete"}
+          {loading ? (
+            <>
+              <Loader2 className="animate-spin" size={16} />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Trash2 size={16} />
+              Delete
+            </>
+          )}
         </button>
 
       </div>

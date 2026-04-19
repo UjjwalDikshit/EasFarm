@@ -36,7 +36,7 @@ export default function AllToolsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-base-200 text-base-content transition-colors duration-300">
       <FilterBar onFilterChange={(f) => setFilters(f)} />
       <ToolList tools={tools} fetchMore={() => loadTools()} hasMore={hasMore} />
     </div>

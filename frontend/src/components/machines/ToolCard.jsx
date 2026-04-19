@@ -3,35 +3,35 @@ import PaymentButton from "../PaymentButton";
 export default function ToolCard({ tool }) {
 
   const handleChat = () => {
-  if (tool.chat?.uniqueId) {
-    window.open(
-      `http://localhost:5173`,// /${tool.chat.uniqueId}
-      "_blank"
-    );
-  }
-};
+    if (tool.chat?.uniqueId) {
+      window.open(`http://localhost:5173`, "_blank");
+    }
+  };
 
   return (
-    <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-blue-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      
+    <div className="bg-base-100 shadow-lg rounded-xl overflow-hidden border border-base-300 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+
       {/* HEADER */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 p-4 text-white">
+      <div className="bg-gradient-to-r from-primary to-primary-focus p-4 text-primary-content">
         <h3 className="text-lg font-semibold">{tool.name}</h3>
         <p className="text-xs opacity-90 mt-1">{tool.category}</p>
       </div>
 
       {/* BODY */}
       <div className="p-4">
-        <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+        <p className="text-sm text-base-content/70 mb-4 leading-relaxed">
           {tool.description}
         </p>
 
         {/* PRICE + PAYMENT */}
-        <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3 mb-4">
+        <div className="flex items-center justify-between bg-base-200 rounded-lg p-3 mb-4">
           <div>
-            <p className="text-xs text-blue-700 font-medium">Rent Price</p>
-            <p className="text-lg font-semibold text-black">
-              ₹{tool.rentPrice} <span className="text-sm text-gray-600">/ {tool.rentUnit}</span>
+            <p className="text-xs text-primary font-medium">Rent Price</p>
+            <p className="text-lg font-semibold text-base-content">
+              ₹{tool.rentPrice}{" "}
+              <span className="text-sm text-base-content/60">
+                / {tool.rentUnit}
+              </span>
             </p>
           </div>
 
@@ -39,11 +39,12 @@ export default function ToolCard({ tool }) {
         </div>
 
         {/* FARMER INFO */}
-        <div className="flex items-center pt-3 border-t border-gray-100">
-          <div className="bg-blue-100 rounded-full w-9 h-9 flex items-center justify-center mr-3">
+        <div className="flex items-center pt-3 border-t border-base-300">
+
+          <div className="bg-primary/20 rounded-full w-9 h-9 flex items-center justify-center mr-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-blue-600"
+              className="h-5 w-5 text-primary"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -58,20 +59,17 @@ export default function ToolCard({ tool }) {
           </div>
 
           <div className="flex-1">
-            <p className="text-xs text-gray-500">Farmer</p>
+            <p className="text-xs text-base-content/60">Farmer</p>
 
-            {/* Name */}
-            <p className="text-sm font-medium text-black">
+            <p className="text-sm font-medium text-base-content">
               {tool.farmer?.fullName || "N/A"}
             </p>
 
-            {/* Unique ID */}
-            <p className="text-xs text-blue-600">
+            <p className="text-xs text-primary">
               ID: {tool.chat?.uniqueId || "No ID"}
             </p>
 
-            {/* Rating (optional) */}
-            <p className="text-xs text-yellow-600">
+            <p className="text-xs text-warning">
               ⭐ {tool.farmer?.rating || "New"}
             </p>
           </div>
@@ -80,11 +78,12 @@ export default function ToolCard({ tool }) {
           <button
             onClick={handleChat}
             disabled={!tool.chat?.uniqueId}
-            className="ml-2 px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-300"
+            className="ml-2 px-3 py-1 text-xs bg-primary text-primary-content rounded-md hover:bg-primary-focus disabled:bg-base-300"
           >
             Chat
           </button>
         </div>
+
       </div>
     </div>
   );

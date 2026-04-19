@@ -67,12 +67,14 @@ const registerTools = async (req, res) => {
       rentUnit,
       lng,
       lat,
-      imageUrl,
-      public_id,
+      image,
     } = req.body;
 
     const farmerId = req.user._id;
-
+    console.log(req.body);
+    // =========================
+    // VALIDATION
+    // =========================
     if (
       !name ||
       !category ||
@@ -81,7 +83,7 @@ const registerTools = async (req, res) => {
       !lng ||
       !lat ||
       !farmerId ||
-      !imageUrl
+      !image
     ) {
       return res.status(400).json({
         success: false,
@@ -89,6 +91,30 @@ const registerTools = async (req, res) => {
       });
     }
 
+    // =========================
+    // IMAGE HANDLING (FIXED)
+    // =========================
+    let imageData = {};
+
+    // Case 1: Cloudinary response object
+    if (typeof image === "object") {
+      imageData = {
+        url: image.secure_url || image.url,
+        public_id: image.public_id,
+      };
+    }
+
+    // Case 2: Only URL string (fallback)
+    else if (typeof image === "string") {
+      imageData = {
+        url: image,
+        public_id: null,
+      };
+    }
+
+    // =========================
+    // FARMER CHECK
+    // =========================
     const existingFarmer = await farmer.findById(farmerId);
     if (!existingFarmer) {
       return res.status(404).json({
@@ -97,6 +123,9 @@ const registerTools = async (req, res) => {
       });
     }
 
+    // =========================
+    // CREATE TOOL
+    // =========================
     const tool = await tools.create({
       name,
       description,
@@ -104,19 +133,14 @@ const registerTools = async (req, res) => {
       rentPrice,
       rentUnit,
 
-      
-      image: {
-        url: imageUrl,
-        public_id: public_id,
-      },
+      image: imageData,
 
       location: {
         type: "Point",
-        coordinates: [lng, lat],
+        coordinates: [Number(lng), Number(lat)], // ensure numbers
       },
 
       farmer: farmerId,
-
       chat: existingFarmer.chat,
     });
 
@@ -127,9 +151,10 @@ const registerTools = async (req, res) => {
     });
   } catch (err) {
     console.error("Error registering tool:", err.message);
+
     res.status(500).json({
       success: false,
-      message: "Server error while registering tool.",
+      message: "Server error while registering tool",
       error: err.message,
     });
   }
@@ -176,8 +201,9 @@ const getAllTools = async (req, res) => {
       rating,
       category,
       isFeatured,
-      sortBy,
+      sort, // <-- from frontend (price-asc etc)
       order,
+      search,
       lat,
       lng,
       maxDistance,
@@ -185,16 +211,15 @@ const getAllTools = async (req, res) => {
       limit,
     } = req.query;
 
-    order = order === "asc" ? 1 : -1;
-    maxDistance = maxDistance ? Number(maxDistance) : 5000;
+    const Page = Math.max(1, Number(page) || 1);
+    const Limit = Math.max(1, Number(limit) || 10);
+    const skip = (Page - 1) * Limit;
 
-    let Page = Number(page) || 1;
-    let Limit = Number(limit) || 10;
-    let skip = (Page - 1) * Limit;
+    maxDistance = maxDistance ? Number(maxDistance) : 5000;
 
     let pipeline = [];
 
-    // GEO FILTER
+    // ================= GEO =================
     if (lat && lng) {
       pipeline.push({
         $geoNear: {
@@ -204,18 +229,29 @@ const getAllTools = async (req, res) => {
           },
           distanceField: "distance",
           spherical: true,
-          maxDistance: maxDistance,
+          maxDistance,
         },
       });
     }
 
-    // FILTERS
+    // ================= FILTER =================
     let matchStage = {};
 
-    if (available !== undefined) matchStage.available = available === "true";
-    if (rating) matchStage.rating = { $gte: Number(rating) };
-    if (category) matchStage.category = category;
-    if (isFeatured !== undefined) matchStage.isFeatured = isFeatured === "true";
+    if (available !== undefined) {
+      matchStage.available = available === "true";
+    }
+
+    if (rating) {
+      matchStage.rating = { $gte: Number(rating) };
+    }
+
+    if (category) {
+      matchStage.category = category;
+    }
+
+    if (isFeatured !== undefined) {
+      matchStage.isFeatured = isFeatured === "true";
+    }
 
     if (minPrice || maxPrice) {
       matchStage.rentPrice = {};
@@ -223,14 +259,26 @@ const getAllTools = async (req, res) => {
       if (maxPrice) matchStage.rentPrice.$lte = Number(maxPrice);
     }
 
+    // ================= SEARCH =================
+    if (search) {
+      matchStage.name = { $regex: search, $options: "i" };
+    }
+
     if (Object.keys(matchStage).length > 0) {
       pipeline.push({ $match: matchStage });
     }
 
-    const totalCount = await tools.countDocuments(matchStage);
-    const totalPages = Math.ceil(totalCount / Limit);
+    // ================= SORT LOGIC =================
+    let sortStage = { createdAt: -1 };
 
-    // JOIN FARMER
+    if (sort) {
+      if (sort === "price-asc") sortStage = { rentPrice: 1 };
+      else if (sort === "price-desc") sortStage = { rentPrice: -1 };
+      else if (sort === "rating-desc") sortStage = { rating: -1 };
+      else if (sort === "newest") sortStage = { createdAt: -1 };
+    }
+
+    // ================= LOOKUP =================
     pipeline.push({
       $lookup: {
         from: "farmers",
@@ -247,31 +295,29 @@ const getAllTools = async (req, res) => {
       },
     });
 
-    // SORT
-    if (sortBy) {
-      let sortField =
-        sortBy === "price"
-          ? "rentPrice"
-          : sortBy === "rating"
-            ? "rating"
-            : "createdAt";
+    // ================= SORT =================
+    pipeline.push({ $sort: sortStage });
 
-      pipeline.push({ $sort: { [sortField]: order } });
-    }
+    // ================= PAGINATION =================
+    pipeline.push({
+      $facet: {
+        metadata: [{ $count: "total" }],
+        data: [{ $skip: skip }, { $limit: Limit }],
+      },
+    });
 
-    // PAGINATION
-    pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: Limit });
+    const [result] = await tools.aggregate(pipeline);
 
-    const result = await tools.aggregate(pipeline);
+    const totalCount = result.metadata[0]?.total || 0;
+    const totalPages = Math.ceil(totalCount / Limit);
 
     res.json({
       success: true,
-      tools: result,
+      tools: result.data,
       totalCount,
       totalPages,
       currentPage: Page,
-      count: result.length,
+      count: result.data.length,
     });
   } catch (err) {
     res.status(500).json({
@@ -321,12 +367,82 @@ const getMyTools = async (req, res) => {
   }
 };
 
+const deleteTool = async (req, res) => {
+  try {
+    const { toolId } = req.params;
+    const farmerId = req.user._id;
+
+    // =========================
+    // VALIDATE TOOL ID
+    // =========================
+    if (!mongoose.Types.ObjectId.isValid(toolId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid tool ID",
+      });
+    }
+
+    // =========================
+    // FIND TOOL
+    // =========================
+    const tool = await tools.findById(toolId);
+
+    if (!tool) {
+      return res.status(404).json({
+        success: false,
+        message: "Tool not found",
+      });
+    }
+
+    // =========================
+    // AUTHORIZATION CHECK
+    // =========================
+    if (tool.farmer.toString() !== farmerId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not authorized to delete this tool",
+      });
+    }
+
+    // =========================
+    // DELETE IMAGE (OPTIONAL - Cloudinary)
+    // =========================
+    if (tool.image?.public_id) {
+      try {
+        const cloudinary = require("cloudinary").v2;
+        await cloudinary.uploader.destroy(tool.image.public_id);
+      } catch (imgErr) {
+        console.error("Image delete failed:", imgErr.message);
+        // continue anyway (don’t block deletion)
+      }
+    }
+
+    // =========================
+    // DELETE TOOL
+    // =========================
+    await tool.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Tool deleted successfully",
+    });
+  } catch (err) {
+    console.error("Delete tool error:", err.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error while deleting tool",
+      error: err.message,
+    });
+  }
+};
 module.exports = {
   register,
   registerTools,
   getSpecificFarmerTools,
   getAllTools,
   getMyTools,
+  deleteTool,
 };
 
 /*

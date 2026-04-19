@@ -333,181 +333,172 @@
 // export default Header;
 
 // src/components/Header.js
-
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../features/themeSlice";
 import { useLocation, useNavigate } from "react-router-dom";
+import { 
+  Menu, 
+  X, 
+  Sun, 
+  Moon, 
+  Sprout, 
+  User, 
+  LogOut, 
+  LayoutDashboard,
+  Home,
+  BookOpen,
+  MessageSquare,
+  Info
+} from "lucide-react";
 import WeatherButton from "./WeatherButton";
 
 const Header = () => {
-  const theme = useSelector((state) => state.theme.mode); // current theme
-  const { user, isAuthenticated } = useSelector((state) => state.auth); // auth state
+  const theme = useSelector((state) => state.theme.mode);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // mobile menu toggle
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // logout navigation with redirect info
-  const handleClickOnLogout = () => {
-    navigate("/logout", {
-      state: { from: location.pathname },
-    });
+  const handleNavigation = (path) => {
+    navigate(path);
+    setIsMenuOpen(false);
   };
 
+  const handleClickOnLogout = () => {
+    setIsMenuOpen(false);
+    navigate("/logout", { state: { from: location.pathname } });
+  };
+
+  const navLinks = [
+    { name: "Home", path: "/", icon: <Home size={18} /> },
+    { name: "Blogs", path: "/blog", icon: <BookOpen size={18} /> },
+    { name: "Chat", path: "/chat", icon: <MessageSquare size={18} /> },
+    { name: "About", path: "/about", icon: <Info size={18} /> },
+  ];
+
   return (
-    <header className="navbar bg-primary text-primary-content shadow-lg sticky top-0 z-50 px-4">
-      {/* Logo Section */}
-      <div className="flex-1 cursor-pointer" onClick={() => navigate("/")}>
-        <span className="btn btn-ghost text-xl md:text-2xl font-bold font-serif">
-          🌾 FarmBazaar
-        </span>
+    <header className="navbar bg-primary text-primary-content shadow-lg sticky top-0 z-50 px-4 h-16">
+      {/* Logo */}
+      <div className="flex-1">
+        <button 
+          onClick={() => handleNavigation("/")} 
+          className="btn btn-ghost text-xl md:text-2xl font-bold font-serif normal-case flex items-center gap-2"
+        >
+          <Sprout size={28} className="text-secondary" />
+          <span className="hidden sm:inline">FarmBazaar</span>
+        </button>
       </div>
 
-      {/* ================= DESKTOP NAVIGATION ================= */}
-      <div className="hidden md:flex items-center space-x-4">
-        {/* Main Navigation Links */}
-        <ul className="menu menu-horizontal px-1 space-x-2">
-          <li>
-            <a onClick={() => navigate("/")}>Home</a>
-          </li>
-          <li>
-            <a onClick={() => navigate("/blog")}>Blogs</a>
-          </li>
-          <li>
-            <a onClick={() => navigate("/chat")}>Chat</a>
-          </li>
-          <li>
-            <a onClick={() => navigate("/about")}>About</a>
-          </li>
-          <li>
-            <WeatherButton /> {/* weather component */}
+      {/* DESKTOP NAVIGATION */}
+      <div className="hidden md:flex items-center">
+        <ul className="menu menu-horizontal px-1 gap-1 items-center">
+          {navLinks.map((link) => (
+            <li key={link.path}>
+              <button 
+                onClick={() => handleNavigation(link.path)}
+                className="hover:bg-white/10 active:bg-white/20 transition-colors"
+              >
+                {link.icon}
+                {link.name}
+              </button>
+            </li>
+          ))}
+          {/* Weather Button integrated as a menu list item */}
+          <li className="ml-1">
+            <WeatherButton />
           </li>
         </ul>
 
-        {/* Theme Toggle */}
-        <label className="swap swap-rotate">
-          <button
-            onClick={() => dispatch(toggleTheme())}
-            className="flex items-center gap-2 px-3 py-1 rounded-full 
-  bg-white/10 backdrop-blur-md border border-white/20
-  hover:bg-white/20 transition-all duration-300"
-          >
-            {theme === "dark" ? "🌙 Dark" : "☀️ Light"}
-          </button>
-        </label>
+        <div className="divider divider-horizontal opacity-20 mx-1"></div>
 
-        {/* ================= AUTH SECTION ================= */}
+        <button
+          onClick={() => dispatch(toggleTheme())}
+          className="btn btn-ghost btn-circle hover:bg-white/10"
+        >
+          {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
 
-        {/* If NOT authenticated → Show Login */}
         {!isAuthenticated ? (
           <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => navigate("/login")}
+            className="btn btn-secondary btn-sm ml-4 shadow-md"
+            onClick={() => handleNavigation("/login")}
           >
             Login
           </button>
         ) : (
-          // If authenticated → Show Avatar Dropdown
-          <div className="dropdown dropdown-end">
-            <div
-              tabIndex={0}
-              role="button"
-              className="btn btn-ghost btn-circle avatar"
-            >
+          <div className="dropdown dropdown-end ml-4">
+            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar ring-2 ring-white/10">
               <div className="w-10 rounded-full bg-secondary flex items-center justify-center">
-                {/* User initials */}
-                <span className="text-sm font-bold">
-                  {user?.fullName
-                    ?.split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()}
+                <span className="text-sm font-bold text-secondary-content">
+                  {user?.fullName?.split(" ").map((n) => n[0]).join("").toUpperCase()}
                 </span>
               </div>
             </div>
-
-            {/* Dropdown Content */}
-            <ul
-              tabIndex={0}
-              className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 text-base-content"
-            >
-              <li className="border-b border-base-300">
-                <div className="flex flex-col p-2">
+            <ul tabIndex={0} className="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow-2xl bg-base-100 rounded-box w-52 text-base-content border border-base-200">
+              <li className="border-b border-base-300 mb-1">
+                <div className="flex flex-col p-2 pointer-events-none">
                   <span className="font-bold">{user?.fullName}</span>
-                  <span className="text-sm">{user?.emailId}</span>
+                  <span className="text-xs opacity-60">{user?.emailId}</span>
                 </div>
               </li>
-
-              <li>
-                <a onClick={() => navigate("/user/dashboard")}>Dashboard</a>
-              </li>
-
-              <li>
-                <a onClick={() => navigate("/profile")}>Profile</a>
-              </li>
-              {user.role === "superAdmin" && (
-                <li>
-                  <a onClick={() => navigate("/super-admin")}>Super Admin</a>
-                </li>
-              )}
-              {user.role === "admin" && (
-                <li>
-                  <a onClick={() => navigate("/admin")}>Admin</a>
-                </li>
-              )}
-              <li>
-                <a onClick={handleClickOnLogout}>Logout</a>
-              </li>
+              <li><button onClick={() => handleNavigation("/user/dashboard")}><LayoutDashboard size={16}/> Dashboard</button></li>
+              <li><button onClick={() => handleNavigation("/profile")}><User size={16}/> Profile</button></li>
+              <li><button onClick={handleClickOnLogout} className="text-error mt-2 pt-2 border-t border-base-200"><LogOut size={16}/> Logout</button></li>
             </ul>
           </div>
         )}
       </div>
 
-      {/* ================= MOBILE SECTION ================= */}
-
-      <div className="md:hidden">
+      {/* MOBILE SECTION */}
+      <div className="flex md:hidden items-center gap-1">
+        {/* Weather button sits nicely next to the hamburger on mobile */}
+        <WeatherButton />
         <button
-          className="btn btn-ghost"
+          className="btn btn-ghost btn-circle"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
+          aria-label="Toggle Menu"
         >
-          ☰
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile Dropdown Menu */}
+      {/* Mobile Dropdown */}
       {isMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 bg-primary shadow-lg">
-          <ul className="menu p-4 space-y-2">
-            <li>
-              <a onClick={() => navigate("/")}>Home</a>
-            </li>
-
-            <li>
-              <a onClick={() => navigate("/blog")}>Blogs</a>
-            </li>
-
-            <li>
-              <a onClick={() => navigate("/about")}>About</a>
-            </li>
-
-            {/* If NOT authenticated */}
-            {!isAuthenticated ? (
-              <li>
-                <a onClick={() => navigate("/login")}>Login</a>
+        <div className="md:hidden absolute top-full left-0 right-0 bg-primary border-t border-white/10 shadow-2xl animate-in slide-in-from-top duration-200">
+          <ul className="menu p-4 gap-2">
+            {navLinks.map((link) => (
+              <li key={link.path}>
+                <button 
+                  onClick={() => handleNavigation(link.path)} 
+                  className="w-full justify-start text-lg py-3"
+                >
+                  {link.icon} {link.name}
+                </button>
               </li>
+            ))}
+            
+            <div className="divider opacity-20 my-1"></div>
+
+            <li>
+              <button 
+                onClick={() => dispatch(toggleTheme())} 
+                className="w-full justify-start py-3"
+              >
+                {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+                Theme: {theme === "dark" ? "Light" : "Dark"}
+              </button>
+            </li>
+
+            {!isAuthenticated ? (
+              <li><button onClick={() => handleNavigation("/login")} className="btn btn-secondary w-full mt-2">Login</button></li>
             ) : (
               <>
-                {/* Authenticated options */}
-                <li>
-                  <a onClick={() => navigate("/user/dashboard")}>Dashboard</a>
-                </li>
-                <li>
-                  <a onClick={() => navigate("/profile")}>Profile</a>
-                </li>
-                <li>
-                  <a onClick={handleClickOnLogout}>Logout</a>
-                </li>
+                <div className="divider opacity-20 my-1"></div>
+                <li><button onClick={() => handleNavigation("/user/dashboard")} className="py-3"><LayoutDashboard size={18}/> Dashboard</button></li>
+                <li><button onClick={() => handleNavigation("/profile")} className="py-3"><User size={18}/> Profile</button></li>
+                <li><button onClick={handleClickOnLogout} className="btn btn-error btn-outline w-full mt-4">Logout</button></li>
               </>
             )}
           </ul>

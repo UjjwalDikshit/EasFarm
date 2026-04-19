@@ -280,109 +280,148 @@ const getAllSeedFertiliserProducts = async (req, res) => {
       weight,
       weightUnit,
       discount,
-      sortBy,
+      sort,
       order,
+      search,
       page,
       limit,
     } = req.query;
 
-    const Page = Number(page) || 1;
-    const Limit = Number(limit) || 10;
+    const Page = Math.max(1, Number(page) || 1);
+    const Limit = Math.max(1, Number(limit) || 10);
     const skip = (Page - 1) * Limit;
-    order = order === "asc" ? 1 : -1;
 
-    let pipeline = [];
-
-    // ---------------- FILTER ----------------
+    // ================= FILTER =================
     let matchStage = {};
 
     if (category) matchStage.category = category;
-    if (brand) matchStage.brand = brand;
-    if (isOrganic !== undefined) matchStage.isOrganic = isOrganic === "true";
-    if (weight) matchStage.weight = Number(weight);
-    if (weightUnit) matchStage.weightUnit = weightUnit;
-    if (discount !== undefined)
-      matchStage.discount = { $gte: Number(discount) };
 
-    if (Object.keys(matchStage).length > 0) {
-      pipeline.push({ $match: matchStage });
+    if (brand) {
+      matchStage.brand = { $regex: brand, $options: "i" };
     }
 
-    const totalCount = await s_and_f.countDocuments(matchStage);
+    if (isOrganic !== undefined && isOrganic !== "") {
+      matchStage.isOrganic = isOrganic === "true";
+    }
+
+    if (weight) matchStage.weight = Number(weight);
+
+    if (weightUnit) matchStage.weightUnit = weightUnit;
+
+    if (discount !== undefined && discount !== "") {
+      matchStage.discount = { $gte: Number(discount) };
+    }
+
+    // 🔍 SEARCH (name + brand)
+    if (search) {
+      matchStage.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { brand: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // ================= SORT =================
+    let sortStage = { createdAt: -1 }; // default
+
+    if (sort) {
+      switch (sort) {
+        case "price-asc":
+          sortStage = { price: 1 };
+          break;
+        case "price-desc":
+          sortStage = { price: -1 };
+          break;
+        case "rating-desc":
+          sortStage = { rating: -1 };
+          break;
+        case "newest":
+          sortStage = { createdAt: -1 };
+          break;
+        default:
+          sortStage = { createdAt: -1 };
+      }
+    }
+
+    // ================= PIPELINE =================
+    const pipeline = [
+      { $match: matchStage },
+
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+
+          data: [
+            { $sort: sortStage },
+            { $skip: skip },
+            { $limit: Limit },
+
+            {
+              $lookup: {
+                from: "farmers",
+                localField: "seller.farmer",
+                foreignField: "_id",
+                as: "farmer",
+              },
+            },
+            {
+              $unwind: {
+                path: "$farmer",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+
+            {
+              $project: {
+                name: 1,
+                category: 1,
+                brand: 1,
+                isOrganic: 1,
+                weight: 1,
+                weightUnit: 1,
+                discount: 1,
+                price: 1,
+                rating: 1,
+                stockAvailable: 1,
+                image: 1,
+                chat: 1,
+                seller: 1,
+
+                farmer: {
+                  fullName: "$farmer.fullName",
+                  location: "$farmer.gpsLocation",
+                },
+
+                createdAt: 1,
+              },
+            },
+          ],
+        },
+      },
+    ];
+
+    const [result] = await s_and_f.aggregate(pipeline);
+
+    const totalCount = result.metadata[0]?.total || 0;
+    const products = result.data;
     const totalPages = Math.ceil(totalCount / Limit);
 
-    // ---------------- JOIN FARMER ----------------
-    pipeline.push({
-      $lookup: {
-        from: "farmers",
-        localField: "seller.farmer",
-        foreignField: "_id",
-        as: "farmer",
-      },
-    });
-
-    pipeline.push({
-      $unwind: {
-        path: "$farmer",
-        preserveNullAndEmptyArrays: true,
-      },
-    });
-
-    // ---------------- SORT ----------------
-    let sortField = "createdAt";
-    if (sortBy === "price") sortField = "price";
-    else if (sortBy === "rating") sortField = "rating";
-    else if (sortBy === "weight") sortField = "weight";
-
-    pipeline.push({ $sort: { [sortField]: order } });
-
-    // ---------------- PAGINATION ----------------
-    pipeline.push({ $skip: skip });
-    pipeline.push({ $limit: Limit });
-
-    // ---------------- FINAL SHAPE ----------------
-    pipeline.push({
-      $project: {
-        name: 1,
-        category: 1,
-        brand: 1,
-        isOrganic: 1,
-        weight: 1,
-        weightUnit: 1,
-        discount: 1,
-        price: 1,
-        rating: 1,
-        stockAvailable: 1,
-        image: 1,
-
-        // 🔥 CHAT ADDED
-        chat: 1,
-
-        farmer: {
-          fullName: "$farmer.fullName",
-          location: "$farmer.gpsLocation",
-        },
-
-        createdAt: 1,
-      },
-    });
-
-    const result = await s_and_f.aggregate(pipeline);
-
-    res.json({
+    return res.json({
       success: true,
-      products: result,
+      products,
       totalCount,
       totalPages,
       currentPage: Page,
-      count: result.length,
+      count: products.length,
     });
+
   } catch (err) {
     console.error("Error fetching products:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
-
 
 const getMySeedAndFertiliser = async (req, res) => {
   try {

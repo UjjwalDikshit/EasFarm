@@ -1,68 +1,113 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import { Filter, RotateCcw, SortAsc, Tag, Leaf } from "lucide-react";
 
 export default function ProductFilterBar({ onFilterChange }) {
   const [category, setCategory] = useState("");
   const [brand, setBrand] = useState("");
   const [organic, setOrganic] = useState("");
   const [sort, setSort] = useState("");
+  const [search, setSearch] = useState("");
+
 
   const handleApply = () => {
     onFilterChange({ category, brand, isOrganic: organic, sort });
   };
 
+  const handleReset = () => {
+    setCategory("");
+    setBrand("");
+    setOrganic("");
+    setSort("");
+    onFilterChange({ category: "", brand: "", isOrganic: "", sort: "" });
+  };
+
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      onFilterChange((prev) => ({ ...prev, search }));
+    }, 500);
+
+    return () => clearTimeout(delay);
+  }, [search]);
+
   return (
-    <div className="flex flex-wrap items-center gap-4 bg-black shadow p-4 sticky top-0 z-10">
-      {/* Category */}
-      <select
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-        className="border rounded p-2 bg-gradient-to-r from-blue-300 to-blue-600 text-white"
-      >
-        <option value="" className="bg-amber-300">All Categories</option>
-        <option value="Seed" className="bg-amber-300">Seeds</option>
-        <option value="Fertiliser" className="bg-amber-300">Fertilisers</option>
-      </select>
+    <div className="sticky top-16 z-30 w-full bg-base-100/80 backdrop-blur-md border-b border-base-200 px-4 py-3 shadow-sm">
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-3">
+        {/* Category Select */}
+        <div className="relative flex items-center">
+          <Tag className="absolute left-3 text-base-content/50" size={16} />
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="select select-bordered select-sm pl-10 h-10 focus:outline-none focus:ring-2 focus:ring-primary/20"
+          >
+            <option value="">All Categories</option>
+            <option value="Seed">Seeds</option>
+            <option value="Fertiliser">Fertilisers</option>
+            <option value="Pesticide">Pesticides</option>
+            <option value="Tool">Farm Tools</option>
+          </select>
+        </div>
 
-      {/* Brand */}
-      <input
-        type="text"
-        placeholder="Brand"
-        value={brand}
-        onChange={(e) => setBrand(e.target.value)}
-        className="border rounded p-2 bg-yellow"
-      />
+        {/* Brand Input */}
+        <input
+          type="text"
+          placeholder="Search Brand..."
+          value={brand}
+          onChange={(e) => setBrand(e.target.value)}
+          className="input input-bordered input-sm h-10 w-full md:w-40 focus:outline-none"
+        />
 
-      {/* Organic */}
-      <select
-        value={organic}
-        onChange={(e) => setOrganic(e.target.value)}
-        className="border rounded p-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-700 text-white"
+        {/* Organic Toggle */}
+        <div className="relative flex items-center">
+          <Leaf className="absolute left-3 text-success" size={16} />
+          <select
+            value={organic}
+            onChange={(e) => setOrganic(e.target.value)}
+            className="select select-bordered select-sm pl-10 h-10 focus:outline-none"
+          >
+            <option value="">All Types</option>
+            <option value="true">Organic</option>
+            <option value="false">Inorganic</option>
+          </select>
+        </div>
 
-      >
-        <option value="" className="bg-amber-300">All Types</option>
-        <option value={true} className="bg-amber-300">Organic</option>
-        <option value={false} className="bg-amber-300">Non-Organic</option>
-      </select>
+        {/* Sort Select */}
+        <div className="relative flex items-center">
+          <SortAsc className="absolute left-3 text-base-content/50" size={16} />
+          <select
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className="select select-bordered select-sm pl-10 h-10 focus:outline-none"
+          >
+            <option value="">Sort By</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="rating-desc">Top Rated</option>
+            <option value="newest">New Arrivals</option>
+          </select>
+        </div>
 
-      {/* Sort */}
-      <select
-        value={sort}
-        onChange={(e) => setSort(e.target.value)}
-        className="border rounded p-2 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-700 text-white"
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 ml-auto">
+          <button
+            onClick={handleReset}
+            className="btn btn-ghost btn-sm h-10 gap-2 text-base-content/70 hover:text-error"
+            title="Reset Filters"
+          >
+            <RotateCcw size={16} />
+            <span className="hidden sm:inline">Reset</span>
+          </button>
 
-      >
-        <option value="" className="bg-amber-300">Sort By</option>
-        <option value="price-asc" className="bg-amber-300">Price: Low → High</option>
-        <option value="price-desc" className="bg-amber-300">Price: High → Low</option>
-        <option value="rating-desc" className="bg-amber-300">Rating: High → Low</option>
-      </select>
-
-      <button
-        onClick={handleApply}
-        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-      >
-        Apply
-      </button>
+          <button
+            onClick={handleApply}
+            className="btn btn-primary btn-sm h-10 gap-2 shadow-md px-6"
+          >
+            <Filter size={16} />
+            Apply
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

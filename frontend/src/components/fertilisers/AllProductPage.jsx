@@ -35,7 +35,7 @@ export default function AllProductsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-base-200 text-base-content transition-colors duration-300">
       <ProductFilterBar onFilterChange={(f) => setFilters(f)} />
       <ProductList products={products} fetchMore={() => loadProducts()} hasMore={hasMore} />
     </div>

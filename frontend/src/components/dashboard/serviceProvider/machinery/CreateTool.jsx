@@ -62,12 +62,12 @@ export default function CreateTool() {
         formData,
       );
 
-      const imageUrl = uploadRes.data.secure_url;
+      const image = uploadRes.data;
 
       // 3. Create tool
       const payload = {
         ...form,
-        image: imageUrl,
+        image,
         rentPrice: Number(form.rentPrice),
       };
 

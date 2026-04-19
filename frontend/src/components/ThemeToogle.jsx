@@ -1,20 +1,29 @@
-import React from "react";
-
-import {useSelector, useDispatch} from "react-redux";
+import React, { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { toggleTheme } from "../features/themeSlice";
+import { Sun, Moon, Cloud } from "lucide-react";
 
-const ThemeToogle = ()=>{
-    const theme = useSelector((state)=>state.theme);
-    const dispatch = useDispatch();
+const ThemeToggle = () => {
+  const theme = useSelector((state) => state.theme.mode);
+  const dispatch = useDispatch();
 
-    return (
-        <button
-        onClick={()=>dispatch(toggleTheme())}
-        className="p-2 rounded bg-gray-200 dark:bg-gray-800"
+  // Apply theme on first load
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  return (
+    <button
+      onClick={() => dispatch(toggleTheme())}
+      className="btn btn-sm btn-outline flex items-center gap-2"
     >
-      {theme === "lofi" ? "🌞 lofi" : "🌙 carm"}
-    </button> 
-   );
+      {theme === "light" && <Sun size={16} />}
+      {theme === "dark" && <Moon size={16} />}
+      {theme === "weather" && <Cloud size={16} />}
+
+      {theme}
+    </button>
+  );
 };
 
-export default ThemeToogle;
+export default ThemeToggle;

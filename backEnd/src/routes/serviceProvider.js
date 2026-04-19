@@ -2,16 +2,16 @@ const express = require('express');
 const router = express.Router();
 const validUser = require('../middlewares/validUser');
 const validSurviceProvider = require('../middlewares/validSurviceProvider.js');
-const  {register, registerTools,getSpecificFarmerTools, getAllTools, getMyTools}= require('../controllers/service_provider.js');
+const  {register, registerTools,getSpecificFarmerTools, getAllTools, getMyTools, deleteTool}= require('../controllers/service_provider.js');
 const {sellSeedAndFertiliser , QuantityManipulator,updatePriceAndDisOfSeedAndFertiliser,buySeedAndFertiliser,removeProduct,getAllSeedFertiliserProducts, getMySeedAndFertiliser, updateProduct} = require('../controllers/fertiliser_provider.js');
 const authMiddleware = require('../middlewares/authMiddleware.js');
 
-router.post('/provider/register',register);
+router.post('/provider/register',authMiddleware,register);
 router.post('/tools/register',authMiddleware,registerTools);
 router.get('/specific-provider/tools/:providerId',validUser,getSpecificFarmerTools);
 router.get('/get-all-tools',authMiddleware, getAllTools);
 router.get("/get-my-tools",authMiddleware,getMyTools);
-
+router.delete("/tool/:toolId", authMiddleware, deleteTool);
 
 
 router.post("/sell",authMiddleware, sellSeedAndFertiliser);

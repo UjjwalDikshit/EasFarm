@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Filter, SortAsc, LayoutGrid, RotateCcw } from "lucide-react";
 
 export default function FilterBar({ onFilterChange }) {
   const [category, setCategory] = useState("");
@@ -11,39 +12,74 @@ export default function FilterBar({ onFilterChange }) {
     });
   };
 
+  const handleReset = () => {
+    setCategory("");
+    setSort("");
+    onFilterChange({ category: "", sort: "" });
+  };
+
   return (
-    <div className="flex flex-wrap items-center gap-4 bg-black shadow p-4 rounded sticky top-0 z-10">
-      
-      {/* CATEGORY FILTER */}
-      <select
-        value={category}
-        onChange={(e) => {
-          const value = e.target.value;
-          setCategory(value);
-          handleApply(value, sort);
-        }}
-        className="border rounded p-2 text-yellow-400 bg-black"
-      >
-        <option value="">All Categories</option>
-        <option value="Tractor">Tractor</option>
-        <option value="Loader">Loader</option>
-      </select>
+    <div className="sticky top-16 z-20 w-full bg-base-100/80 backdrop-blur-md border-b border-base-200 px-4 py-3 shadow-sm">
+      <div className="max-w-7xl mx-auto flex flex-wrap items-center gap-4">
+        
+        {/* Category Filter */}
+        <div className="relative flex items-center group">
+          <LayoutGrid className="absolute left-3 text-primary transition-colors group-focus-within:text-primary-focus" size={18} />
+          <select
+            value={category}
+            onChange={(e) => {
+              const value = e.target.value;
+              setCategory(value);
+              handleApply(value, sort);
+            }}
+            className="select select-bordered select-sm pl-10 h-10 w-full md:w-48 bg-base-100 focus:ring-2 focus:ring-primary/20 outline-none"
+          >
+            <option value="">All Categories</option>
+            <option value="Tractor">Tractors</option>
+            <option value="Loader">Loaders</option>
+            <option value="Harvester">Harvesters</option>
+            <option value="Plow">Plows</option>
+          </select>
+        </div>
 
-      {/* SORT FILTER */}
-      <select
-        value={sort}
-        onChange={(e) => {
-          const value = e.target.value;
-          setSort(value);
-          handleApply(category, value);
-        }}
-        className="border rounded p-2 text-black bg-white"
-      >
-        <option value="">Sort By</option>
-        <option value="price-asc">Price: Low → High</option>
-        <option value="price-desc">Price: High → Low</option>
-      </select>
+        {/* Sort Filter */}
+        <div className="relative flex items-center group">
+          <SortAsc className="absolute left-3 text-primary transition-colors group-focus-within:text-primary-focus" size={18} />
+          <select
+            value={sort}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSort(value);
+              handleApply(category, value);
+            }}
+            className="select select-bordered select-sm pl-10 h-10 w-full md:w-48 bg-base-100 focus:ring-2 focus:ring-primary/20 outline-none"
+          >
+            <option value="">Sort By</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="newest">Newest Arrivals</option>
+          </select>
+        </div>
 
+        {/* Actions */}
+        <div className="flex items-center gap-2 ml-auto">
+          {(category || sort) && (
+            <button
+              onClick={handleReset}
+              className="btn btn-ghost btn-sm h-10 gap-2 text-error hover:bg-error/10"
+            >
+              <RotateCcw size={16} />
+              <span className="hidden sm:inline">Reset</span>
+            </button>
+          )}
+          
+          <div className="hidden md:flex items-center gap-2 px-3 py-2 bg-primary/10 text-primary rounded-lg">
+            <Filter size={16} />
+            <span className="text-xs font-bold uppercase tracking-wider">Active Filters</span>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
