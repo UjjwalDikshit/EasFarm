@@ -40,16 +40,18 @@ export default function BlogCreateForm() {
   };
 
   const onSubmit = async (formData) => {
-
     try {
+      if (tags.length === 0) {
+        toast.error("At least one tag is required");
+        return;
+      }
       setIsUploading(true); // spinner start
 
       let uploadedMedia = null;
+      let uploadDetails = null;
 
       if (["image", "video", "pdf"].includes(mediaType)) {
-        console.log(mediaType);
-        
-        const uploadDetails = await uploadToCloudinary({
+        uploadDetails = await uploadToCloudinary({
           type: "blog",
           fileType: mediaType,
           file: formData.file,
@@ -74,8 +76,12 @@ export default function BlogCreateForm() {
         thumbnail:
           mediaType === "video"
             ? {
-                secureUrl: uploadDetails.eager?.[0]?.secure_url,
-                publicId: uploadDetails.eager?.[0]?.public_id,
+                secureUrl:
+                  uploadDetails?.eager?.[0]?.secure_url ||
+                  uploadDetails?.secure_url,
+                publicId:
+                  uploadDetails?.eager?.[0]?.public_id ||
+                  uploadDetails?.public_id,
               }
             : null,
       };
@@ -104,7 +110,7 @@ export default function BlogCreateForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className=" mx-auto p-6 bg-grey shadow-xl rounded-2xl space-y-5"
+      className=" mx-auto p-6  shadow-xl rounded-2xl space-y-5"
     >
       <h2 className="text-2xl font-bold text-green-900">Create Blog</h2>
 

@@ -1,36 +1,49 @@
 import { useState } from "react";
 
 export default function FilterBar({ onFilterChange }) {
-  const [category, setCatergory] = useState("");
+  const [category, setCategory] = useState("");
   const [sort, setSort] = useState("");
 
-  const handleApply = () => {
-    onFilterChange({ category, sort });
+  const handleApply = (newCategory, newSort) => {
+    onFilterChange({
+      category: newCategory,
+      sort: newSort,
+    });
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-4 bg-black shadow p-4 rounded sticky top-0 z - 10">
-      {/*category filter */}
+    <div className="flex flex-wrap items-center gap-4 bg-black shadow p-4 rounded sticky top-0 z-10">
+      
+      {/* CATEGORY FILTER */}
       <select
         value={category}
-        onChange={(e) =>{ setCatergory(e.target.value); handleApply()}}
-        className="border rounded p-2 text-yellow"
+        onChange={(e) => {
+          const value = e.target.value;
+          setCategory(value);
+          handleApply(value, sort);
+        }}
+        className="border rounded p-2 text-yellow-400 bg-black"
       >
         <option value="">All Categories</option>
         <option value="Tractor">Tractor</option>
         <option value="Loader">Loader</option>
       </select>
 
-        {/* sort filter */}
+      {/* SORT FILTER */}
       <select
         value={sort}
-        onChange={(e)=>{setSort(e.target.value); handleApply()}}
-        className="border rounded p-2 text-black"
-        >
-            <option value="">Sort By</option>
-            <option value="price-asc">Price: Low → High</option>
-            <option value="price-desc">Price: High → Low</option>
-        </select>
+        onChange={(e) => {
+          const value = e.target.value;
+          setSort(value);
+          handleApply(category, value);
+        }}
+        className="border rounded p-2 text-black bg-white"
+      >
+        <option value="">Sort By</option>
+        <option value="price-asc">Price: Low → High</option>
+        <option value="price-desc">Price: High → Low</option>
+      </select>
+
     </div>
   );
 }

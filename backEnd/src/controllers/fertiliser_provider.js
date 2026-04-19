@@ -248,7 +248,7 @@ const removeProduct = async (req, res) => {
       });
     }
 
-    // 🔥 DELETE IMAGE FROM CLOUDINARY
+    //  DELETE IMAGE FROM CLOUDINARY
     if (product.image?.public_id) {
       await cloudinary.uploader.destroy(product.image.public_id);
     }

@@ -34,7 +34,7 @@ createRoot(document.getElementById("root")).render(
           </BrowserRouter>
 
           {/* optional but recommended */}
-          <ReactQueryDevtools initialIsOpen={false} />
+          {/* <ReactQueryDevtools initialIsOpen={false} /> */}
         </QueryClientProvider>
       </PersistGate>
     </Provider>

@@ -18,12 +18,14 @@ const {
 } = require("../controllers/adminWork");
 const authMiddleware = require("../middlewares/authMiddleware");
 
+
+router.get("/schemes",getSchemes);
 router.use(authMiddleware); // globally
 
 // ============================
 // REPORTS
 // ===========================
-router.get("/reports", getReports);
+router.get("/reports",isAdmin, getReports);
 router.put("/reports/:id/review", isAdmin, markReviewed);
 router.put("/reports/:id/resolve", isAdmin, resolveReport);
 router.delete(
@@ -36,7 +38,7 @@ router.delete(
 // ============================
 // GOVERNMENT SCHEMES
 // ============================
-router.get("/schemes",getSchemes);
+
 router.post("/schemes", isAdmin, addScheme);
 router.put("/schemes/:id", isAdmin, updateScheme);
 router.delete("/schemes/:id", isAdmin, deleteScheme);
